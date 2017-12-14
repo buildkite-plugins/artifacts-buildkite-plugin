@@ -1,0 +1,31 @@
+#!/bin/bash
+set -euo pipefail
+
+DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
+
+. "$DIR/../lib/shared.bash"
+
+if [[ -z "${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-}" ]] ; then
+  BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR="."
+fi
+
+pushd "${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR}"
+trap popd EXIT
+
+paths=()
+
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACT_UPLOAD:-}" ]] ; then
+  paths+=("$BUILDKITE_PLUGIN_ARTIFACT_UPLOAD")
+fi
+
+while IFS='=' read -r path _ ; do
+  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACT_UPLOAD_[0-9]+) ]] ; then
+    paths+=("${!path}")
+  fi
+done < <(env | sort)
+
+
+if [ "${#paths[@]}" -gt 0 ]; then
+  echo "--- Uploading artifacts"
+  buildkite-agent artifact upload "$(IFS=, ; echo "${paths[*]}")"
+fi
