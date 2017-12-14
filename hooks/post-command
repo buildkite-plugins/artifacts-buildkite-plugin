@@ -17,12 +17,12 @@ trap popd EXIT
 
 paths=()
 
-if [[ -n "${BUILDKITE_PLUGIN_ARTIFACT_UPLOAD:-}" ]] ; then
-  paths+=("$BUILDKITE_PLUGIN_ARTIFACT_UPLOAD")
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] ; then
+  paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD")
 fi
 
 while IFS='=' read -r path _ ; do
-  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACT_UPLOAD_[0-9]+) ]] ; then
+  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+) ]] ; then
     paths+=("${!path}")
   fi
 done < <(env | sort)

@@ -14,12 +14,12 @@ fi
 
 paths=()
 
-if [[ -n "${BUILDKITE_PLUGIN_ARTIFACT_DOWNLOAD:-}" ]] ; then
-  paths+=("$BUILDKITE_PLUGIN_ARTIFACT_DOWNLOAD")
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] ; then
+  paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD")
 fi
 
 while IFS='=' read -r path _ ; do
-  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACT_DOWNLOAD_[0-9]+) ]] ; then
+  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+) ]] ; then
     paths+=("${!path}")
   fi
 done < <(env | sort)
