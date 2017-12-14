@@ -1,9 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
-DIR="$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)"
-
-. "$DIR/../lib/shared.bash"
+debug_mode='off'
+if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
+  echo "--- :hammer: Enabling debug mode"
+  debug_mode='on'
+  set -x
+fi
 
 if [[ -z "${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-}" ]] ; then
   BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR="."
