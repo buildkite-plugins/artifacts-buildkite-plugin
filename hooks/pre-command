@@ -30,7 +30,7 @@ while IFS='=' read -r path _ ; do
   fi
 done < <(env | sort)
 
-workdir=("${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}")
+workdir="${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}"
 
 if [ "${#paths[@]}" -gt 0 ]; then
   if [ "${#args[@]}" -gt 0 ]; then
