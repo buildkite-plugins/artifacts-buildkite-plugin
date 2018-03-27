@@ -26,6 +26,12 @@ done < <(env | sort)
 
 
 if [ "${#paths[@]}" -gt 0 ]; then
-  echo "--- Downloading artifacts"
-  buildkite-agent artifact download "$(IFS=, ; echo "${paths[*]}")" "${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR}"
+  build=${BUILDKITE_PLUGIN_ARTIFACTS_BUILD:-}
+  build_message=$([[ -n "$build" ]] && echo " from build: $build" || echo "")
+
+  echo "--- Downloading artifacts$build_message"
+
+  buildkite-agent artifact download \
+    $([[ -n "$build" ]] && echo "--build $build" || echo "") \
+    "$(IFS=, ; echo "${paths[*]}")" "${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR}"
 fi

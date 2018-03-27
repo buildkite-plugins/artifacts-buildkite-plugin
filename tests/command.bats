@@ -19,10 +19,25 @@ load '/usr/local/lib/bats/load.bash'
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
 }
 
+@test "Pre-command downloads artifacts with build" {
+  stub buildkite-agent \
+    "artifact download --build 12345 *.log . : echo Downloading artifacts from build: 12345"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_BUILD="12345"
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "Downloading artifacts from build: 12345"
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_BUILD
+}
+
 @test "Post-command uploads artifacts with a single value for upload" {
   stub buildkite-agent \
     "artifact upload *.log : echo Uploading artifacts"
-
 
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
   run "$PWD/hooks/post-command"
