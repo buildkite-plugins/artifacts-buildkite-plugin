@@ -24,6 +24,24 @@ steps:
         download: "log/**/*.log"
 ```
 
+## Configuration
+
+### `upload`
+
+A glob pattern for files to upload.
+
+### `download`
+
+A glob pattern for files to download.
+
+### `step` (optional)
+
+The job UUID or name to download the artifact from.
+
+### `build` (optional)
+
+The build UUID to download the artifact from.
+
 ## License
 
 MIT (see [LICENSE](LICENSE))
