@@ -1,6 +1,6 @@
 # Artifacts Buildkite Plugin
 
-A [Buildkite](https://buildkite.com/) plugin for uploading and downloading artifacts from the buildkite interface.
+A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) for uploading and downloading artifacts.
 
 ## Uploading artifacts
 
