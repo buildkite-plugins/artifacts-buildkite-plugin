@@ -8,12 +8,11 @@ if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   set -x
 fi
 
-if [[ -z "${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-}" ]] ; then
-  BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR="."
-fi
+args=()
 
-pushd "${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR}"
-trap popd EXIT
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_JOB:-}" ]] ; then
+  args+=("--job" "${BUILDKITE_PLUGIN_ARTIFACTS_JOB}")
+fi
 
 paths=()
 
@@ -27,8 +26,19 @@ while IFS='=' read -r path _ ; do
   fi
 done < <(env | sort)
 
+workdir=${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}
+
+pushd "${workdir}"
+trap popd EXIT
 
 if [ "${#paths[@]}" -gt 0 ]; then
-  echo "--- Uploading artifacts"
-  buildkite-agent artifact upload "$(IFS=, ; echo "${paths[*]}")"
+  if [ "${#args[@]}" -gt 0 ]; then
+    echo "--- Uploading artifacts with args: ${args[*]}"
+
+    buildkite-agent artifact upload "${args[@]}" "$(IFS=, ; echo "${paths[*]}")"
+  else
+    echo "--- Uploading artifacts"
+
+    buildkite-agent artifact upload "$(IFS=, ; echo "${paths[*]}")"
+  fi
 fi

@@ -8,8 +8,14 @@ if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   set -x
 fi
 
-if [[ -z "${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-}" ]] ; then
-  BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR="."
+args=()
+
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_STEP:-}" ]] ; then
+  args+=("--step" "${BUILDKITE_PLUGIN_ARTIFACTS_STEP}")
+fi
+
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_BUILD:-}" ]] ; then
+  args+=("--build" "${BUILDKITE_PLUGIN_ARTIFACTS_BUILD}")
 fi
 
 paths=()
@@ -24,8 +30,16 @@ while IFS='=' read -r path _ ; do
   fi
 done < <(env | sort)
 
+workdir="${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}"
 
 if [ "${#paths[@]}" -gt 0 ]; then
-  echo "--- Downloading artifacts"
-  buildkite-agent artifact download "$(IFS=, ; echo "${paths[*]}")" "${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR}"
+  if [ "${#args[@]}" -gt 0 ]; then
+    echo "--- Downloading artifacts with args: ${args[*]}"
+
+    buildkite-agent artifact download "${args[@]}" "$(IFS=, ; echo "${paths[*]}")" "${workdir}"
+  else
+    echo "--- Downloading artifacts"
+
+    buildkite-agent artifact download "$(IFS=, ; echo "${paths[*]}")" "${workdir}"
+  fi
 fi
