@@ -1,0 +1,19 @@
+name: artifacts
+description: Upload and download artifacts
+author: https://github.com/buildkite
+configuration:
+  properties:
+    upload:
+      type: string
+    download:
+      type: string
+    step:
+      type: string
+    build:
+      type: string
+  oneOf:
+    - required:
+      - upload
+    - required:
+      - download
+  additionalProperties: false

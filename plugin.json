@@ -1,6 +1,0 @@
-{
-  "name": "artifacts",
-  "description": "Upload and download artifacts",
-  "author": "@buildkite",
-  "public": true
-}
