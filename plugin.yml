@@ -1,6 +1,7 @@
 name: artifacts
 description: Upload and download artifacts
 author: https://github.com/buildkite
+requirements: []
 configuration:
   properties:
     upload:
