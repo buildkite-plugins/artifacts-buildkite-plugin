@@ -1,10 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-debug_mode='off'
 if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   echo "--- :hammer: Enabling debug mode"
-  debug_mode='on'
   set -x
 fi
 
