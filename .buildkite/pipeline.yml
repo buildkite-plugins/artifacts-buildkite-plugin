@@ -6,7 +6,7 @@ steps:
   - label: ":sparkles: lint"
     plugins:
       plugin-linter#v2.0.0:
-        name: artifacts
+        id: artifacts
   - label: ":shell: Shellcheck"
     plugins:
       shellcheck#v1.0.1:
