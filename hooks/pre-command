@@ -30,7 +30,7 @@ done < <(env | sort)
 
 workdir="${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}"
 
-if [ "${#paths[@]}" -gt 0 ]; then
+if [ "${#paths[@]}" -eq 1 ]; then
   if [ "${#args[@]}" -gt 0 ]; then
     echo "--- Downloading artifacts with args: ${args[*]}"
 
@@ -39,5 +39,21 @@ if [ "${#paths[@]}" -gt 0 ]; then
     echo "--- Downloading artifacts"
 
     buildkite-agent artifact download "$(IFS=, ; echo "${paths[*]}")" "${workdir}"
+  fi
+elif [ "${#paths[@]}" -gt 1 ]; then
+  if [ "${#args[@]}" -gt 0 ]; then
+    echo "--- Downloading artifacts with args: ${args[*]}"
+
+    for path in "${paths[@]}"
+      do
+        buildkite-agent artifact download "${args[@]}" "$path" "${workdir}"
+      done
+  else
+    echo "--- Downloading artifacts"
+
+    for path in "${paths[@]}"
+      do
+        buildkite-agent artifact download "$path" "${workdir}"
+      done
   fi
 fi
