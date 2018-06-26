@@ -73,7 +73,7 @@ load '/usr/local/lib/bats/load.bash'
 @test "Pre-command downloads multiple artifacts with build" {
   stub buildkite-agent \
     "artifact download --build 12345 foo.log . : echo Downloading artifacts with args: --build 12345" \
-    "artifact download --build 12345 bar.log . : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 bar.log . : echo Downloading artifacts with args: --build 12345"
 
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0="foo.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1="bar.log"
@@ -81,7 +81,7 @@ load '/usr/local/lib/bats/load.bash'
   run "$PWD/hooks/pre-command"
 
   assert_success
-  assert_output --partial "Downloading artifacts"
+  assert_output --partial "Downloading artifacts with args: --build 12345"
 
   unstub buildkite-agent
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
@@ -107,6 +107,43 @@ load '/usr/local/lib/bats/load.bash'
     "artifact upload --job 12345 *.log : echo Uploading artifacts with args: --job 12345"
 
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_JOB="12345"
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts with args: --job 12345"
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_JOB
+}
+
+@test "Post-command uploads multiple artifacts" {
+  stub buildkite-agent \
+    "artifact upload foo.log : echo Uploading artifacts" \
+    "artifact upload bar.log : echo Uploading artifacts" \
+    "artifact upload baz.log : echo Uploading artifacts" \
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0="foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1="bar.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2="baz.log"
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_JOB
+}
+
+@test "Post-command uploads multiple artifacts with a job" {
+  stub buildkite-agent \
+    "artifact upload --job 12345 foo.log : echo Uploading artifacts with args: --job 12345" \
+    "artifact upload --job 12345 bar.log : echo Uploading artifacts with args: --job 12345"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0="foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1="bar.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_JOB="12345"
   run "$PWD/hooks/post-command"
 

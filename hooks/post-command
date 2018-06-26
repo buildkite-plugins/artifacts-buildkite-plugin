@@ -29,14 +29,30 @@ workdir=${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}
 pushd "${workdir}"
 trap popd EXIT
 
-if [ "${#paths[@]}" -gt 0 ]; then
+if [ "${#paths[@]}" -eq 1 ]; then
   if [ "${#args[@]}" -gt 0 ]; then
     echo "--- Uploading artifacts with args: ${args[*]}"
 
-    buildkite-agent artifact upload "${args[@]}" "$(IFS=, ; echo "${paths[*]}")"
+    buildkite-agent artifact upload "${args[@]}" "${paths[*]}"
   else
     echo "--- Uploading artifacts"
 
-    buildkite-agent artifact upload "$(IFS=, ; echo "${paths[*]}")"
+    buildkite-agent artifact upload "${paths[*]}"
+  fi
+elif [ "${#paths[@]}" -gt 1 ]; then
+  if [ "${#args[@]}" -gt 0 ]; then
+    echo "--- Uploading artifacts with args: ${args[*]}"
+
+    for path in "${paths[@]}"
+      do
+        buildkite-agent artifact upload "${args[@]}" "$path"
+      done
+  else
+    echo "--- Uploading artifacts"
+
+    for path in "${paths[@]}"
+      do
+        buildkite-agent artifact upload "$path"
+      done
   fi
 fi
