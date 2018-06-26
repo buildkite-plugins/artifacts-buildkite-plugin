@@ -19,7 +19,7 @@ or
 steps:
   - plugins:
       artifacts#v1.1.0:
-        upload: [ "log/**/*.log", debug/*.error ]
+        upload: [ "log/**/*.log", "debug/*.error" ]
 ```
 
 ## Downloading artifacts
@@ -39,7 +39,7 @@ or
 steps:
   - plugins:
       artifacts#v1.1.0:
-        download: [ "log/**/*.log", debug/*.error ]
+        download: [ "log/**/*.log", "debug/*.error" ]
 ```
 
 ## Configuration
