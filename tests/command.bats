@@ -66,8 +66,9 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "Downloading artifacts"
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
-  unset BUILDKITE_PLUGIN_ARTIFACTS_BUILD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2
 }
 
 @test "Pre-command downloads multiple artifacts with build" {
@@ -84,7 +85,8 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "Downloading artifacts with args: --build 12345"
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_BUILD
 }
 
@@ -133,8 +135,9 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "Uploading artifacts"
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
-  unset BUILDKITE_PLUGIN_ARTIFACTS_JOB
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2
 }
 
 @test "Post-command uploads multiple artifacts with a job" {
@@ -151,6 +154,7 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "Uploading artifacts with args: --job 12345"
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_JOB
 }
