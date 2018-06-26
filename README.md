@@ -13,6 +13,15 @@ steps:
         upload: "log/**/*.log"
 ```
 
+or
+
+```yml
+steps:
+  - plugins:
+      artifacts#v1.1.0:
+        upload: [ "log/**/*.log", debug/*.error ]
+```
+
 ## Downloading artifacts
 
 This downloads artifacts matching globs to the local filesystem. See [downloading artifacts](https://buildkite.com/docs/agent/cli-artifact#downloading-artifacts) for more details.
@@ -24,15 +33,24 @@ steps:
         download: "log/**/*.log"
 ```
 
+or
+
+```yml
+steps:
+  - plugins:
+      artifacts#v1.1.0:
+        download: [ "log/**/*.log", debug/*.error ]
+```
+
 ## Configuration
 
 ### `upload`
 
-A glob pattern for files to upload.
+A glob pattern, or array of glob patterns, for files to upload.
 
 ### `download`
 
-A glob pattern for files to download.
+A glob pattern, or array of glob patterns, for files to download.
 
 ### `step` (optional)
 

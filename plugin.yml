@@ -5,9 +5,9 @@ requirements: []
 configuration:
   properties:
     upload:
-      type: string
+      type: [ string, array ]
     download:
-      type: string
+      type: [ string, array ]
     step:
       type: string
     build:
