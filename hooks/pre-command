@@ -34,11 +34,11 @@ if [ "${#paths[@]}" -eq 1 ]; then
   if [ "${#args[@]}" -gt 0 ]; then
     echo "--- Downloading artifacts with args: ${args[*]}"
 
-    buildkite-agent artifact download "${args[@]}" "$(IFS=, ; echo "${paths[*]}")" "${workdir}"
+    buildkite-agent artifact download "${args[@]}" "${paths[*]}" "${workdir}"
   else
     echo "--- Downloading artifacts"
 
-    buildkite-agent artifact download "$(IFS=, ; echo "${paths[*]}")" "${workdir}"
+    buildkite-agent artifact download "${paths[*]}" "${workdir}"
   fi
 elif [ "${#paths[@]}" -gt 1 ]; then
   if [ "${#args[@]}" -gt 0 ]; then
