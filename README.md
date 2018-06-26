@@ -9,7 +9,7 @@ This functionality duplicates the [artifact_paths]() property in the pipeline ya
 ```yml
 steps:
   - plugins:
-      artifacts#v1.1.0:
+      artifacts#v1.2.0:
         upload: "log/**/*.log"
 ```
 
@@ -18,7 +18,7 @@ or
 ```yml
 steps:
   - plugins:
-      artifacts#v1.1.0:
+      artifacts#v1.2.0:
         upload: [ "log/**/*.log", "debug/*.error" ]
 ```
 
@@ -29,7 +29,7 @@ This downloads artifacts matching globs to the local filesystem. See [downloadin
 ```yml
 steps:
   - plugins:
-      artifacts#v1.1.0:
+      artifacts#v1.2.0:
         download: "log/**/*.log"
 ```
 
@@ -38,7 +38,7 @@ or
 ```yml
 steps:
   - plugins:
-      artifacts#v1.1.0:
+      artifacts#v1.2.0:
         download: [ "log/**/*.log", "debug/*.error" ]
 ```
 
