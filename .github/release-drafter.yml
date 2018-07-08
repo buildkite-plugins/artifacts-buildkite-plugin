@@ -10,8 +10,7 @@ template: |
 
   ```diff
   steps:
-    - command: test.sh
-      plugins:
+    - plugins:
   -     artifacts#$PREVIOUS_TAG:
   +     artifacts#TODO:
           download: "log/**/*.log"
