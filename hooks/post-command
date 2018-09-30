@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 set -euo pipefail
 
 if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
@@ -30,14 +30,23 @@ pushd "${workdir}"
 trap popd EXIT
 
 if [ "${#paths[@]}" -eq 1 ]; then
+  if [[ "${paths[*]}" = *'->'* ]]; then
+    IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
+    echo "Moving [${source}] to [${dest}]..."
+    mv "${source}" "${dest}"
+    path="${dest}"
+  else
+    path="${paths[*]}"
+  fi
+
   if [ "${#args[@]}" -gt 0 ]; then
     echo "--- Uploading artifacts with args: ${args[*]}"
 
-    buildkite-agent artifact upload "${args[@]}" "${paths[*]}"
+    buildkite-agent artifact upload "${args[@]}" "${path}"
   else
     echo "--- Uploading artifacts"
 
-    buildkite-agent artifact upload "${paths[*]}"
+    buildkite-agent artifact upload "${path}"
   fi
 elif [ "${#paths[@]}" -gt 1 ]; then
   if [ "${#args[@]}" -gt 0 ]; then
@@ -45,6 +54,12 @@ elif [ "${#paths[@]}" -gt 1 ]; then
 
     for path in "${paths[@]}"
       do
+        if [[ "${path}" = *'->'* ]]; then
+          IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
+          echo "Moving [${source}] to [${dest}]..."
+          mv "${source}" "${dest}"
+          path="${dest}"
+        fi
         buildkite-agent artifact upload "${args[@]}" "$path"
       done
   else
@@ -52,6 +67,12 @@ elif [ "${#paths[@]}" -gt 1 ]; then
 
     for path in "${paths[@]}"
       do
+        if [[ "${paths}" = *'->'* ]]; then
+          IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
+          echo "Moving [${source}] to [${dest}]..."
+          mv "${source}" "${dest}"
+          path="${dest}"
+        fi
         buildkite-agent artifact upload "$path"
       done
   fi
