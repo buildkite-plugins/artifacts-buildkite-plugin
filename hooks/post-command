@@ -32,8 +32,10 @@ trap popd EXIT
 if [ "${#paths[@]}" -eq 1 ]; then
   if [[ "${paths[*]}" = *'->'* ]]; then
     IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
-    echo "Moving [${source}] to [${dest}]..."
-    mv "${source}" "${dest}"
+    if [ -f ${source} ]; then
+      echo "Moving [${source}] to [${dest}]..."
+      mv "${source}" "${dest}"
+    fi
     path="${dest}"
   else
     path="${paths[*]}"
@@ -56,8 +58,10 @@ elif [ "${#paths[@]}" -gt 1 ]; then
       do
         if [[ "${path}" = *'->'* ]]; then
           IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
-          echo "Moving [${source}] to [${dest}]..."
-          mv "${source}" "${dest}"
+          if [ -f ${source} ]; then
+            echo "Moving [${source}] to [${dest}]..."
+            mv "${source}" "${dest}"
+          fi
           path="${dest}"
         fi
         buildkite-agent artifact upload "${args[@]}" "$path"
@@ -69,8 +73,10 @@ elif [ "${#paths[@]}" -gt 1 ]; then
       do
         if [[ "${paths}" = *'->'* ]]; then
           IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
-          echo "Moving [${source}] to [${dest}]..."
-          mv "${source}" "${dest}"
+          if [ -f ${source} ]; then
+            echo "Moving [${source}] to [${dest}]..."
+            mv "${source}" "${dest}"
+          fi
           path="${dest}"
         fi
         buildkite-agent artifact upload "$path"
