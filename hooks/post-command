@@ -71,7 +71,7 @@ elif [ "${#paths[@]}" -gt 1 ]; then
 
     for path in "${paths[@]}"
       do
-        if [[ "${paths}" = *'->'* ]]; then
+        if [[ "${path}" = *'->'* ]]; then
           IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
           if [ -f ${source} ]; then
             echo "Moving [${source}] to [${dest}]..."
