@@ -33,7 +33,7 @@ if [ "${#paths[@]}" -eq 1 ]; then
   if [[ "${paths[*]}" = *'->'* ]]; then
     IFS='|' read -r source dest <<< $(echo ${paths[*]} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
     if [ -f ${source} ]; then
-      echo "Moving [${source}] to [${dest}]..."
+      echo "--- Moving [${source}] to [${dest}]..."
       mv "${source}" "${dest}"
     fi
     path="${dest}"
@@ -59,7 +59,7 @@ elif [ "${#paths[@]}" -gt 1 ]; then
         if [[ "${path}" = *'->'* ]]; then
           IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
           if [ -f ${source} ]; then
-            echo "Moving [${source}] to [${dest}]..."
+            echo "--- Moving [${source}] to [${dest}]..."
             mv "${source}" "${dest}"
           fi
           path="${dest}"
@@ -74,7 +74,7 @@ elif [ "${#paths[@]}" -gt 1 ]; then
         if [[ "${path}" = *'->'* ]]; then
           IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
           if [ -f ${source} ]; then
-            echo "Moving [${source}] to [${dest}]..."
+            echo "--- Moving [${source}] to [${dest}]..."
             mv "${source}" "${dest}"
           fi
           path="${dest}"

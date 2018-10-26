@@ -31,14 +31,21 @@ done < <(env | sort)
 workdir="${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}"
 
 if [ "${#paths[@]}" -eq 1 ]; then
+  if [[ "${paths[*]}" = *'->'* ]]; then
+    IFS='|' read -r source dest <<< $(echo ${paths[*]} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
+  else
+    source="${paths[*]}"
+    dest="${workdir}"
+  fi
+
   if [ "${#args[@]}" -gt 0 ]; then
     echo "--- Downloading artifacts with args: ${args[*]}"
 
-    buildkite-agent artifact download "${args[@]}" "${paths[*]}" "${workdir}"
+    buildkite-agent artifact download "${args[@]}" "${source}" "${dest}"
   else
     echo "--- Downloading artifacts"
 
-    buildkite-agent artifact download "${paths[*]}" "${workdir}"
+    buildkite-agent artifact download "${source}" "${dest}"
   fi
 elif [ "${#paths[@]}" -gt 1 ]; then
   if [ "${#args[@]}" -gt 0 ]; then
@@ -46,14 +53,26 @@ elif [ "${#paths[@]}" -gt 1 ]; then
 
     for path in "${paths[@]}"
       do
-        buildkite-agent artifact download "${args[@]}" "$path" "${workdir}"
+        if [[ "${path}" = *'->'* ]]; then
+          IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
+        else 
+          source="${path}"
+          dest="${workdir}"
+        fi
+        buildkite-agent artifact download "${args[@]}" "${source}" "${dest}"
       done
   else
     echo "--- Downloading artifacts"
 
     for path in "${paths[@]}"
       do
-        buildkite-agent artifact download "$path" "${workdir}"
+        if [[ "${path}" = *'->'* ]]; then
+          IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
+        else 
+          source="${path}"
+          dest="${workdir}"
+        fi
+        buildkite-agent artifact download "${source}" "${dest}"
       done
   fi
 fi
