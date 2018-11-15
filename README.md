@@ -22,6 +22,15 @@ steps:
         upload: [ "log/**/*.log", "debug/*.error" ]
 ```
 
+or
+
+```yml
+steps:
+  - plugins:
+      artifacts#v1.2.0:
+        upload: log/foo.log -> foo.log
+```
+
 ## Downloading artifacts
 
 This downloads artifacts matching globs to the local filesystem. See [downloading artifacts](https://buildkite.com/docs/agent/cli-artifact#downloading-artifacts) for more details.
@@ -42,6 +51,15 @@ steps:
         download: [ "log/**/*.log", "debug/*.error" ]
 ```
 
+or
+
+```yml
+steps:
+  - plugins:
+      artifacts#v1.2.0:
+        download: foo.log -> /tmp/foo.log
+```
+
 ## Configuration
 
 ### `upload`
@@ -59,6 +77,11 @@ The job UUID or name to download the artifact from.
 ### `build` (optional)
 
 The build UUID to download the artifact from.
+
+### Relocation
+
+If a file needs to be renamed or moved before upload or after download, a special pattern is supported: `source -> destination`.
+This only supports 1 file at a time.
 
 ## License
 
