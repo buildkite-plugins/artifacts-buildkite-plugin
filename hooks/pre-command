@@ -2,7 +2,7 @@
 set -eo pipefail
 
 if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
-  echo "--- :hammer: Enabling debug mode"
+  echo "~~~ :hammer: Enabling debug mode"
   set -x
 fi
 
@@ -42,18 +42,18 @@ if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_
   fi
 
   if [ "${#args[@]}" -gt 0 ]; then
-    echo "--- Downloading artifacts with args: ${args[*]}"
+    echo "~~~ Downloading artifacts with args: ${args[*]}"
 
     buildkite-agent artifact download "${args[@]}" "${source}" "${dest}"
   else
-    echo "--- Downloading artifacts"
+    echo "~~~ Downloading artifacts"
 
     buildkite-agent artifact download "${source}" "${dest}"
   fi
 elif [ "${#paths[@]}" -ge 1 ]; then
   index=0
   if [ "${#args[@]}" -gt 0 ]; then
-    echo "--- Downloading artifacts with args: ${args[*]}"
+    echo "~~~ Downloading artifacts with args: ${args[*]}"
     for path in "${paths[@]}"
       do
         source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_FROM"
@@ -69,7 +69,7 @@ elif [ "${#paths[@]}" -ge 1 ]; then
         ((index+=1))
       done
   else
-    echo "--- Downloading artifacts"
+    echo "~~~ Downloading artifacts"
 
     for path in "${paths[@]}"
       do
