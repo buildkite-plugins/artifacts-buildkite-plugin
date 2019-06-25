@@ -31,15 +31,15 @@ workdir=${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}
 pushd "${workdir}"
 trap popd EXIT
 
-if [ "${#paths[@]}" -eq 1 ]; then
-  if ! [[ -z ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && ! [[ -z ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]; then
+if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]); then
+  if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]; then
     if [ -f ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]; then
       echo "--- Moving [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}]..."
       mv "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
     fi
     path="${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
   else
-    path="${paths[*]}"
+    path="${paths[0]}"
   fi
 
   if [ "${#args[@]}" -gt 0 ]; then
@@ -60,7 +60,7 @@ elif [ "${#paths[@]}" -gt 1 ]; then
       do
         source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
-        if ! [[ -z ${!source_env_var} ]] && ! [[ -z ${!dest_env_var} ]]; then
+        if [[ -n ${!source_env_var} ]] && [[ -n ${!dest_env_var} ]]; then
           if [ -f ${!source_env_var} ]; then
             echo "--- Moving [${!source_env_var}] to [${!dest_env_var}]..."
             mv "${!source_env_var}" "${!dest_env_var}"
@@ -77,7 +77,7 @@ elif [ "${#paths[@]}" -gt 1 ]; then
       do
         source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
-        if ! [[ -z ${!source_env_var} ]] && ! [[ -z ${!dest_env_var} ]]; then
+        if [[ -n ${!source_env_var} ]] && [[ -n ${!dest_env_var} ]]; then
           if [ -f ${!source_env_var} ]; then
             echo "--- Moving [${!source_env_var}] to [${!dest_env_var}]..."
             mv "${!source_env_var}" "${!dest_env_var}"
