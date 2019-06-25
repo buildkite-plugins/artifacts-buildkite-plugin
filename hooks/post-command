@@ -51,7 +51,7 @@ if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_AR
 
     buildkite-agent artifact upload "${path}"
   fi
-elif [ "${#paths[@]}" -gt 1 ]; then
+elif [ "${#paths[@]}" -ge 1 ]; then
   index=0
   if [ "${#args[@]}" -gt 0 ]; then
     echo "--- Uploading artifacts with args: ${args[*]}"
