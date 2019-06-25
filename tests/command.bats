@@ -183,11 +183,11 @@ load '/usr/local/lib/bats/load.bash'
 
 @test "Post-command uploads artifacts with a single value for upload with relocation" {
   stub buildkite-agent \
-    "artifact upload foo2.log : echo Uploading artifacts"
+    "artifact upload /tmp/foo2.log : echo Uploading artifacts"
   touch /tmp/foo.log
 
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM="/tmp/foo.log"
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO="foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO="/tmp/foo2.log"
   run "$PWD/hooks/post-command"
 
   assert_success
@@ -218,10 +218,10 @@ load '/usr/local/lib/bats/load.bash'
 @test "Post-command uploads artifacts with a single value for upload and a job and relocation" {
   touch /tmp/foo.log
   stub buildkite-agent \
-    "artifact upload --job 12345 foo2.log : echo Uploading artifacts with args: --job 12345"
+    "artifact upload --job 12345 /tmp/foo2.log : echo Uploading artifacts with args: --job 12345"
 
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM="/tmp/foo.log"
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO="foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO="/tmp/foo2.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_JOB="12345"
   run "$PWD/hooks/post-command"
 
@@ -235,13 +235,14 @@ load '/usr/local/lib/bats/load.bash'
 }
 
 @test "Post-command uploads multiple artifacts" {
+  touch /tmp/foo.log
   stub buildkite-agent \
-    "artifact upload foo.log : echo Uploading artifacts" \
+    "artifact upload /tmp/foo2.log : echo Uploading artifacts" \
     "artifact upload bar.log : echo Uploading artifacts" \
     "artifact upload baz.log : echo Uploading artifacts" \
 
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM="foo.log"
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO="foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM="/tmp/foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO="/tmp/foo2.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1="bar.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2="baz.log"
   run "$PWD/hooks/post-command"
@@ -257,13 +258,13 @@ load '/usr/local/lib/bats/load.bash'
 }
 
 @test "Post-command uploads multiple artifacts with some relocation" {
-  touch foo.log
+  touch /tmp/foo.log
   stub buildkite-agent \
-    "artifact upload foo2.log : echo Uploading artifacts" \
+    "artifact upload /tmp/foo2.log : echo Uploading artifacts" \
     "artifact upload bar.log : echo Uploading artifacts" \
     "artifact upload baz.log : echo Uploading artifacts" \
 
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM="foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM="/tmp/foo.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO="/tmp/foo2.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1="bar.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2="baz.log"
@@ -271,7 +272,7 @@ load '/usr/local/lib/bats/load.bash'
 
   assert_success
   assert [ -e /tmp/foo2.log ]
-  assert [ ! -e foo.log ]
+  assert [ ! -e /tmp/foo.log ]
   assert_output --partial "Uploading artifacts"
 
   unstub buildkite-agent
