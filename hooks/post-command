@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -eo pipefail
 
 if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   echo "--- :hammer: Enabling debug mode"
@@ -16,10 +16,12 @@ paths=()
 
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] ; then
   paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD")
+elif [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO:-}" ]] ; then
+  paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM")
 fi
 
 while IFS='=' read -r path _ ; do
-  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+) ]] ; then
+  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+) ]] && ! [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]_TO+) ]]; then
     paths+=("${!path}")
   fi
 done < <(env | sort)
@@ -30,13 +32,12 @@ pushd "${workdir}"
 trap popd EXIT
 
 if [ "${#paths[@]}" -eq 1 ]; then
-  if [[ "${paths[*]}" = *'->'* ]]; then
-    IFS='|' read -r source dest <<< $(echo ${paths[*]} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
-    if [ -f ${source} ]; then
-      echo "--- Moving [${source}] to [${dest}]..."
-      mv "${source}" "${dest}"
+  if ! [[ -z ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && ! [[ -z ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]; then
+    if [ -f ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]; then
+      echo "--- Moving [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}]..."
+      mv "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
     fi
-    path="${dest}"
+    path="${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
   else
     path="${paths[*]}"
   fi
@@ -56,13 +57,14 @@ elif [ "${#paths[@]}" -gt 1 ]; then
 
     for path in "${paths[@]}"
       do
-        if [[ "${path}" = *'->'* ]]; then
-          IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
-          if [ -f ${source} ]; then
-            echo "--- Moving [${source}] to [${dest}]..."
-            mv "${source}" "${dest}"
+        if ! [[ -z ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && ! [[ -z ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]; then
+          if [ -f ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]; then
+            echo "--- Moving [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}]..."
+            mv "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
           fi
-          path="${dest}"
+          path="${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
+        else
+          path="${paths[*]}"
         fi
         buildkite-agent artifact upload "${args[@]}" "$path"
       done
@@ -71,13 +73,14 @@ elif [ "${#paths[@]}" -gt 1 ]; then
 
     for path in "${paths[@]}"
       do
-        if [[ "${path}" = *'->'* ]]; then
-          IFS='|' read -r source dest <<< $(echo ${path} | awk '{split($0,a,"\\s?->\\s?"); print a[1]"|"a[2]}')
-          if [ -f ${source} ]; then
-            echo "--- Moving [${source}] to [${dest}]..."
-            mv "${source}" "${dest}"
+        if ! [[ -z ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && ! [[ -z ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]; then
+          if [ -f ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]; then
+            echo "--- Moving [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}]..."
+            mv "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
           fi
-          path="${dest}"
+          path="${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
+        else
+          path="${paths[*]}"
         fi
         buildkite-agent artifact upload "$path"
       done
