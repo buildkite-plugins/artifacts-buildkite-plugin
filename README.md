@@ -28,7 +28,20 @@ or
 steps:
   - plugins:
       artifacts#v1.2.0:
-        upload: log/foo.log -> foo.log
+        upload: 
+          from: log1.log
+          to: log2.log
+```
+
+or
+
+```yml
+steps:
+  - plugins:
+      artifacts#v1.2.0:
+        upload: 
+        - from: log1.log
+          to: log2.log
 ```
 
 ## Downloading artifacts
@@ -57,7 +70,20 @@ or
 steps:
   - plugins:
       artifacts#v1.2.0:
-        download: foo.log -> /tmp/foo.log
+        download: 
+          from: log1.log
+          to: log2.log
+```
+
+or
+
+```yml
+steps:
+  - plugins:
+      artifacts#v1.2.0:
+        download: 
+        - from: log1.log
+          to: log2.log
 ```
 
 ## Configuration

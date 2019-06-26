@@ -20,17 +20,22 @@ load '/usr/local/lib/bats/load.bash'
 }
 
 @test "Pre-command downloads artifacts with relocation" {
+  touch /tmp/foo.log
   stub buildkite-agent \
-    "artifact download foo.log foo2.log : echo Downloading artifacts"
+    "artifact download /tmp/foo.log : echo Downloading artifacts"
 
-  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="foo.log -> foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM="/tmp/foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO="/tmp/foo2.log"
   run "$PWD/hooks/pre-command"
 
   assert_success
   assert_output --partial "Downloading artifacts"
+  assert [ -e /tmp/foo2.log ]
+  assert [ ! -e /tmp/foo.log ]
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO
 }
 
 @test "Pre-command downloads artifacts with step" {
@@ -50,18 +55,23 @@ load '/usr/local/lib/bats/load.bash'
 }
 
 @test "Pre-command downloads artifacts with step and relocation" {
+  touch /tmp/foo.log
   stub buildkite-agent \
-    "artifact download --step 54321 foo.log foo2.log : echo Downloading artifacts with args: --step 54321"
+    "artifact download --step 54321 /tmp/foo.log : echo Downloading artifacts with args: --step 54321"
 
-  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="foo.log -> foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM="/tmp/foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO="/tmp/foo2.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_STEP="54321"
   run "$PWD/hooks/pre-command"
 
   assert_success
   assert_output --partial "Downloading artifacts with args: --step 54321"
+  assert [ -e /tmp/foo2.log ]
+  assert [ ! -e /tmp/foo.log ]
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_STEP
 }
 
@@ -102,21 +112,26 @@ load '/usr/local/lib/bats/load.bash'
 }
 
 @test "Pre-command downloads multiple artifacts with some relocation" {
+  touch /tmp/foo.log
   stub buildkite-agent \
-    "artifact download foo.log foo2.log : echo Downloading artifacts" \
+    "artifact download /tmp/foo.log . : echo Downloading artifacts" \
     "artifact download bar.log . : echo Downloading artifacts" \
     "artifact download baz.log . : echo Downloading artifacts"
 
-  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0="foo.log -> foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM="/tmp/foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_TO="/tmp/foo2.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1="bar.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2="baz.log"
   run "$PWD/hooks/pre-command"
 
   assert_success
   assert_output --partial "Downloading artifacts"
+  assert [ -e /tmp/foo2.log ]
+  assert [ ! -e /tmp/foo.log ]
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2
 }
@@ -141,20 +156,25 @@ load '/usr/local/lib/bats/load.bash'
 }
 
 @test "Pre-command downloads multiple artifacts with build and relocation" {
+  touch /tmp/foo.log
   stub buildkite-agent \
-    "artifact download --build 12345 foo.log foo2.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo.log : echo Downloading artifacts with args: --build 12345" \
     "artifact download --build 12345 bar.log . : echo Downloading artifacts with args: --build 12345"
 
-  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0="foo.log -> foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM="/tmp/foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_TO="/tmp/foo2.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1="bar.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_BUILD="12345"
   run "$PWD/hooks/pre-command"
 
   assert_success
   assert_output --partial "Downloading artifacts with args: --build 12345"
+  assert [ -e /tmp/foo2.log ]
+  assert [ ! -e /tmp/foo.log ]
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_BUILD
 }
@@ -178,7 +198,8 @@ load '/usr/local/lib/bats/load.bash'
     "artifact upload /tmp/foo2.log : echo Uploading artifacts"
   touch /tmp/foo.log
 
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="/tmp/foo.log -> /tmp/foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM="/tmp/foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO="/tmp/foo2.log"
   run "$PWD/hooks/post-command"
 
   assert_success
@@ -186,7 +207,8 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "Uploading artifacts"
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO
 }
 
 @test "Post-command uploads artifacts with a single value for upload and a job" {
@@ -210,7 +232,8 @@ load '/usr/local/lib/bats/load.bash'
   stub buildkite-agent \
     "artifact upload --job 12345 /tmp/foo2.log : echo Uploading artifacts with args: --job 12345"
 
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="/tmp/foo.log -> /tmp/foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM="/tmp/foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO="/tmp/foo2.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_JOB="12345"
   run "$PWD/hooks/post-command"
 
@@ -218,17 +241,20 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "Uploading artifacts with args: --job 12345"
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_JOB
 }
 
 @test "Post-command uploads multiple artifacts" {
+  touch /tmp/foo.log
   stub buildkite-agent \
-    "artifact upload foo.log : echo Uploading artifacts" \
+    "artifact upload /tmp/foo2.log : echo Uploading artifacts" \
     "artifact upload bar.log : echo Uploading artifacts" \
     "artifact upload baz.log : echo Uploading artifacts" \
 
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0="foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM="/tmp/foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO="/tmp/foo2.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1="bar.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2="baz.log"
   run "$PWD/hooks/post-command"
@@ -237,7 +263,8 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "Uploading artifacts"
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2
 }
@@ -249,7 +276,8 @@ load '/usr/local/lib/bats/load.bash'
     "artifact upload bar.log : echo Uploading artifacts" \
     "artifact upload baz.log : echo Uploading artifacts" \
 
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0="/tmp/foo.log -> /tmp/foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM="/tmp/foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO="/tmp/foo2.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1="bar.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2="baz.log"
   run "$PWD/hooks/post-command"
@@ -260,7 +288,8 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "Uploading artifacts"
 
   unstub buildkite-agent
-  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2
 }
