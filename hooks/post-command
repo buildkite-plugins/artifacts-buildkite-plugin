@@ -1,11 +1,6 @@
 #!/bin/bash
 set -eo pipefail
 
-post_process_move(){
-    echo "~~~ Moving [${1}] to [${2}]..."
-    mv ${1} ${2}
-}
-
 if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   echo "~~~ :hammer: Enabling debug mode"
   set -x
@@ -39,7 +34,8 @@ trap popd EXIT
 if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]); then
   if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]; then
     if [[ -e ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]]; then
-      post_process_move "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
+      echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}]..."
+      mv ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}
     fi
     path="${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
   else
@@ -65,7 +61,8 @@ elif [ "${#paths[@]}" -ge 1 ]; then
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
         if [[ -n ${!source_env_var} ]] && [[ -n ${!dest_env_var} ]]; then
           if [[ -e ${!source_env_var} ]]; then
-            pre_process_move "${!source_env_var}" "${!dest_env_var}"
+            echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
+            mv ${!source_env_var} ${!dest_env_var}
           fi
           path="${!dest_env_var}"
         fi
@@ -81,7 +78,8 @@ elif [ "${#paths[@]}" -ge 1 ]; then
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
         if [[ -n ${!source_env_var} ]] && [[ -n ${!dest_env_var} ]]; then
           if [[ -e ${!source_env_var} ]]; then
-            pre_process_move "${!source_env_var}" "${!dest_env_var}"
+            echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
+            mv ${!source_env_var} ${!dest_env_var}
           fi
           path="${!dest_env_var}"
         fi
