@@ -2,7 +2,7 @@
 set -eo pipefail
 
 
-post_process_move(){
+pre_process_move(){
     if ! [[ -d $(dirname "${2}") ]]; then
         mkdir -p $(dirname "${2}")
     fi
@@ -56,7 +56,7 @@ if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_
     buildkite-agent artifact download "${source}" "${workdir}"
   fi
   if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}" ]]; then
-    post_process_move ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM} ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}
+    pre_process_move ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM} ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}
   fi
 
 elif [[ "${#paths[@]}" -ge 1 ]]; then
@@ -74,7 +74,7 @@ elif [[ "${#paths[@]}" -ge 1 ]]; then
         fi
         buildkite-agent artifact download "${args[@]}" "${source}" "${workdir}"
         if [[ -n "${!dest_env_var}" ]]; then
-            post_process_move ${source} ${!dest_env_var}
+            pre_process_move ${source} ${!dest_env_var}
         fi
         ((index+=1))
       done
@@ -92,7 +92,7 @@ elif [[ "${#paths[@]}" -ge 1 ]]; then
         fi
         buildkite-agent artifact download "${source}" "${workdir}"
         if [[ -n "${!dest_env_var}" ]]; then
-            post_process_move ${source} ${!dest_env_var}
+            pre_process_move ${source} ${!dest_env_var}
         fi
         ((index+=1))
       done
