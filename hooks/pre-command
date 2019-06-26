@@ -52,8 +52,10 @@ if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_
     if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
         mkdir -p $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}")
     fi
+    echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}]..."
     ls
-    mv ${source} ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}
+    mv ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM} ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}
+    ls ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}
   fi
 elif [ "${#paths[@]}" -ge 1 ]; then
   index=0
@@ -73,8 +75,10 @@ elif [ "${#paths[@]}" -ge 1 ]; then
             if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
                 mkdir -p $(dirname "${!dest_env_var}")
             fi
+            echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
             ls
             mv ${source} ${!dest_env_var}
+            ls ${!dest_env_var}
         fi
         ((index+=1))
       done
@@ -95,8 +99,10 @@ elif [ "${#paths[@]}" -ge 1 ]; then
             if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
                 mkdir -p $(dirname "${!dest_env_var}")
             fi
+            echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
             ls
             mv ${source} ${!dest_env_var}
+            ls ${!dest_env_var}
         fi
         ((index+=1))
       done
