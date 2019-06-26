@@ -1,6 +1,11 @@
 #!/bin/bash
 set -eo pipefail
 
+post_process_move(){
+    echo "~~~ Moving [${1}] to [${2}]..."
+    mv ${1} ${2}
+}
+
 if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   echo "~~~ :hammer: Enabling debug mode"
   set -x
@@ -15,9 +20,9 @@ fi
 paths=()
 
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] ; then
-  paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD")
+  paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD}")
 elif [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO:-}" ]] ; then
-  paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM")
+  paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD}_FROM")
 fi
 
 while IFS='=' read -r path _ ; do
@@ -33,9 +38,8 @@ trap popd EXIT
 
 if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]); then
   if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]; then
-    if [ -e ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]; then
-      echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}]..."
-      mv "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
+    if [[ -e ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]]; then
+      post_process_move "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
     fi
     path="${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
   else
@@ -44,13 +48,12 @@ if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_AR
 
   if [ "${#args[@]}" -gt 0 ]; then
     echo "~~~ Uploading artifacts with args: ${args[*]}"
-
     buildkite-agent artifact upload "${args[@]}" "${path}"
   else
     echo "~~~ Uploading artifacts"
-
     buildkite-agent artifact upload "${path}"
   fi
+
 elif [ "${#paths[@]}" -ge 1 ]; then
   index=0
   if [ "${#args[@]}" -gt 0 ]; then
@@ -61,9 +64,8 @@ elif [ "${#paths[@]}" -ge 1 ]; then
         source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
         if [[ -n ${!source_env_var} ]] && [[ -n ${!dest_env_var} ]]; then
-          if [ -e ${!source_env_var} ]; then
-            echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-            mv "${!source_env_var}" "${!dest_env_var}"
+          if [[ -e ${!source_env_var} ]]; then
+            pre_process_move "${!source_env_var}" "${!dest_env_var}"
           fi
           path="${!dest_env_var}"
         fi
@@ -78,9 +80,8 @@ elif [ "${#paths[@]}" -ge 1 ]; then
         source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
         if [[ -n ${!source_env_var} ]] && [[ -n ${!dest_env_var} ]]; then
-          if [ -e ${!source_env_var} ]; then
-            echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-            mv "${!source_env_var}" "${!dest_env_var}"
+          if [[ -e ${!source_env_var} ]]; then
+            pre_process_move "${!source_env_var}" "${!dest_env_var}"
           fi
           path="${!dest_env_var}"
         fi

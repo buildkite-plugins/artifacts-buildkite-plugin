@@ -48,22 +48,20 @@ if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_
     source="${paths[*]}"
   fi
 
-  if [ "${#args[@]}" -gt 0 ]; then
+  if [[ "${#args[@]}" -gt 0 ]]; then
     echo "~~~ Downloading artifacts with args: ${args[*]}"
-
     buildkite-agent artifact download "${args[@]}" "${source}" "${workdir}"
   else
     echo "~~~ Downloading artifacts"
-
     buildkite-agent artifact download "${source}" "${workdir}"
   fi
   if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}" ]]; then
     post_process_move ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM} ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}
   fi
 
-elif [ "${#paths[@]}" -ge 1 ]; then
+elif [[ "${#paths[@]}" -ge 1 ]]; then
   index=0
-  if [ "${#args[@]}" -gt 0 ]; then
+  if [[ "${#args[@]}" -gt 0 ]]; then
     echo "~~~ Downloading artifacts with args: ${args[*]}"
     for path in "${paths[@]}"
       do
