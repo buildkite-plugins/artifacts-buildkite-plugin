@@ -35,20 +35,24 @@ workdir="${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}"
 if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM} ]] && [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO} ]]); then
   if ! [[ -z ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM} ]] && ! [[ -z ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO} ]]; then
     source="${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}"
-    dest="${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}"
   else
     source="${paths[*]}"
-    dest="${workdir}"
   fi
 
   if [ "${#args[@]}" -gt 0 ]; then
     echo "~~~ Downloading artifacts with args: ${args[*]}"
 
-    buildkite-agent artifact download "${args[@]}" "${source}" "${dest}"
+    buildkite-agent artifact download "${args[@]}" "${source}" "${workdir}"
   else
     echo "~~~ Downloading artifacts"
 
-    buildkite-agent artifact download "${source}" "${dest}"
+    buildkite-agent artifact download "${source}" "${workdir}"
+  fi
+  if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}" ]]; then
+    if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
+        mkdir -p $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}")
+    fi
+    mv ${source} ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}
   fi
 elif [ "${#paths[@]}" -ge 1 ]; then
   index=0
@@ -60,12 +64,16 @@ elif [ "${#paths[@]}" -ge 1 ]; then
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_TO"
         if ! [[ -z ${!source_env_var} ]] && ! [[ -z ${!dest_env_var} ]]; then
           source="${!source_env_var}"
-          dest="${!dest_env_var}"
         else
           source="${path}"
-          dest="${workdir}"
         fi
-        buildkite-agent artifact download "${args[@]}" "${source}" "${dest}"
+        buildkite-agent artifact download "${args[@]}" "${source}" "${workdir}"
+        if [[ -n "${!dest_env_var}" ]]; then
+            if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
+                mkdir -p $(dirname "${!dest_env_var}")
+            fi
+            mv ${source} ${!dest_env_var}
+        fi
         ((index+=1))
       done
   else
@@ -77,12 +85,16 @@ elif [ "${#paths[@]}" -ge 1 ]; then
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_TO"
         if ! [[ -z ${!source_env_var} ]] && ! [[ -z ${!dest_env_var} ]]; then
           source="${!source_env_var}"
-          dest="${!dest_env_var}"
         else
           source="${path}"
-          dest="${workdir}"
         fi
-        buildkite-agent artifact download "${source}" "${dest}"
+        buildkite-agent artifact download "${source}" "${workdir}"
+        if [[ -n "${!dest_env_var}" ]]; then
+            if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
+                mkdir -p $(dirname "${!dest_env_var}")
+            fi
+            mv ${source} ${!dest_env_var}
+        fi
         ((index+=1))
       done
   fi
