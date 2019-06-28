@@ -9,8 +9,8 @@ This functionality duplicates the [artifact_paths]() property in the pipeline ya
 ```yml
 steps:
   - plugins:
-      artifacts#v1.2.0:
-        upload: "log/**/*.log"
+      - artifacts#v1.2.0:
+          upload: "log/**/*.log"
 ```
 
 or
@@ -18,8 +18,8 @@ or
 ```yml
 steps:
   - plugins:
-      artifacts#v1.2.0:
-        upload: [ "log/**/*.log", "debug/*.error" ]
+      - artifacts#v1.2.0:
+          upload: [ "log/**/*.log", "debug/*.error" ]
 ```
 
 or
@@ -51,8 +51,8 @@ This downloads artifacts matching globs to the local filesystem. See [downloadin
 ```yml
 steps:
   - plugins:
-      artifacts#v1.2.0:
-        download: "log/**/*.log"
+      - artifacts#v1.2.0:
+          download: "log/**/*.log"
 ```
 
 or
@@ -60,8 +60,8 @@ or
 ```yml
 steps:
   - plugins:
-      artifacts#v1.2.0:
-        download: [ "log/**/*.log", "debug/*.error" ]
+      - artifacts#v1.2.0:
+          download: [ "log/**/*.log", "debug/*.error" ]
 ```
 
 or

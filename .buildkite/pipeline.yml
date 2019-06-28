@@ -1,13 +1,13 @@
 steps:
   - label: "🤡 :hammer:"
     plugins:
-      docker-compose#v2.5.1:
-        run: tests
+      - docker-compose#v3.0.3:
+          run: tests
   - label: ":sparkles: lint"
     plugins:
-      plugin-linter#v2.0.0:
-        id: artifacts
+      - plugin-linter#v2.0.0:
+          id: artifacts
   - label: ":shell: Shellcheck"
     plugins:
-      shellcheck#v1.1.1:
-        files: hooks/**
+      - shellcheck#v1.1.2:
+          files: hooks/**
