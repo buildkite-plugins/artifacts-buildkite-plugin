@@ -106,8 +106,8 @@ The build UUID to download the artifact from.
 
 ### Relocation
 
-If a file needs to be renamed or moved before upload or after download, a special pattern is supported: `source -> destination`.
-This only supports 1 file at a time.
+If a file needs to be renamed or moved before upload or after download, a nested object is used with `to` and `from` keys.
+At this time, this can only be used with single files and does not support glob patterns.
 
 ## License
 
