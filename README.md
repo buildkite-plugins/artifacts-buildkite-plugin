@@ -22,6 +22,28 @@ steps:
           upload: [ "log/**/*.log", "debug/*.error" ]
 ```
 
+or
+
+```yml
+steps:
+  - plugins:
+      artifacts#v1.2.0:
+        upload: 
+          from: log1.log
+          to: log2.log
+```
+
+or
+
+```yml
+steps:
+  - plugins:
+      artifacts#v1.2.0:
+        upload: 
+        - from: log1.log
+          to: log2.log
+```
+
 ## Downloading artifacts
 
 This downloads artifacts matching globs to the local filesystem. See [downloading artifacts](https://buildkite.com/docs/agent/cli-artifact#downloading-artifacts) for more details.
@@ -42,6 +64,28 @@ steps:
           download: [ "log/**/*.log", "debug/*.error" ]
 ```
 
+or
+
+```yml
+steps:
+  - plugins:
+      artifacts#v1.2.0:
+        download: 
+          from: log1.log
+          to: log2.log
+```
+
+or
+
+```yml
+steps:
+  - plugins:
+      artifacts#v1.2.0:
+        download: 
+        - from: log1.log
+          to: log2.log
+```
+
 ## Configuration
 
 ### `upload`
@@ -59,6 +103,11 @@ The job UUID or name to download the artifact from.
 ### `build` (optional)
 
 The build UUID to download the artifact from.
+
+### Relocation
+
+If a file needs to be renamed or moved before upload or after download, a nested object is used with `to` and `from` keys.
+At this time, this can only be used with single files and does not support glob patterns.
 
 ## License
 
