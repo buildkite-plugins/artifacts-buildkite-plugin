@@ -8,26 +8,29 @@ This functionality duplicates the [artifact_paths]() property in the pipeline ya
 
 ```yml
 steps:
-  - plugins:
-      - artifacts#v1.2.0:
-          upload: "log/**/*.log"
+  - command: ...
+    plugins:
+    - artifacts#v1.2.0:
+        upload: "log/**/*.log"
 ```
 
 or
 
 ```yml
 steps:
-  - plugins:
-      - artifacts#v1.2.0:
-          upload: [ "log/**/*.log", "debug/*.error" ]
+  - command: ...
+    plugins:
+    - artifacts#v1.2.0:
+        upload: [ "log/**/*.log", "debug/*.error" ]
 ```
 
 or
 
 ```yml
 steps:
-  - plugins:
-      artifacts#v1.2.0:
+  - command: ...
+    plugins:
+    - artifacts#v1.2.0:
         upload: 
           from: log1.log
           to: log2.log
@@ -37,8 +40,9 @@ or
 
 ```yml
 steps:
-  - plugins:
-      artifacts#v1.2.0:
+  - command: ...
+    plugins:
+    - artifacts#v1.2.0:
         upload: 
         - from: log1.log
           to: log2.log
@@ -50,7 +54,8 @@ This downloads artifacts matching globs to the local filesystem. See [downloadin
 
 ```yml
 steps:
-  - plugins:
+  - command: ...
+    plugins:
       - artifacts#v1.2.0:
           download: "log/**/*.log"
 ```
@@ -59,7 +64,8 @@ or
 
 ```yml
 steps:
-  - plugins:
+  - command: ...
+    plugins:
       - artifacts#v1.2.0:
           download: [ "log/**/*.log", "debug/*.error" ]
 ```
@@ -68,39 +74,41 @@ or
 
 ```yml
 steps:
-  - plugins:
-      artifacts#v1.2.0:
-        download: 
-          from: log1.log
-          to: log2.log
+  - command: ...
+    plugins:
+      - artifacts#v1.2.0:
+          download: 
+            from: log1.log
+            to: log2.log
 ```
 
 or
 
 ```yml
 steps:
-  - plugins:
-      artifacts#v1.2.0:
-        download: 
-        - from: log1.log
-          to: log2.log
+  - command: ...
+    plugins:
+      - artifacts#v1.2.0:
+          download: 
+          - from: log1.log
+            to: log2.log
 ```
 
 ## Configuration
 
-### `upload`
+### `upload` (string, array of strings, array of {from,to})
 
 A glob pattern, or array of glob patterns, for files to upload.
 
-### `download`
+### `download` (string, array of strings, array of {from,to})
 
 A glob pattern, or array of glob patterns, for files to download.
 
-### `step` (optional)
+### `step` (optional, string)
 
 The job UUID or name to download the artifact from.
 
-### `build` (optional)
+### `build` (optional, string)
 
 The build UUID to download the artifact from.
 
@@ -108,6 +116,20 @@ The build UUID to download the artifact from.
 
 If a file needs to be renamed or moved before upload or after download, a nested object is used with `to` and `from` keys.
 At this time, this can only be used with single files and does not support glob patterns.
+
+## Developing
+
+To run testing, shellchecks and plugin linting use use `bk run` with the [Buildkite CLI](https://github.com/buildkite/cli).
+
+```bash
+bk run
+```
+
+Or if you want to run just the tests, you can use the [Docker Compose CLI](https://docs.docker.com/compose/):
+
+```bash
+docker-compose run --rm tests
+```
 
 ## License
 
