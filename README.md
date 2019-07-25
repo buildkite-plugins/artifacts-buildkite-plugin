@@ -96,11 +96,11 @@ steps:
 
 ## Configuration
 
-### `upload` (string, array of strings, array of {from,to})
+### `upload` (string, array of strings, {from,to}, array of {from,to})
 
 A glob pattern, or array of glob patterns, for files to upload.
 
-### `download` (string, array of strings, array of {from,to})
+### `download` (string, array of strings, {from,to}, array of {from,to})
 
 A glob pattern, or array of glob patterns, for files to download.
 
