@@ -4,7 +4,7 @@ A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) for uploading 
 
 ## Uploading artifacts
 
-This functionality duplicates the [artifact_paths]() property in the pipeline yaml files.
+This functionality duplicates the [artifact_paths]() property in the pipeline yaml files; with the difference that it also allows downloading artifacts and that this plugin is executed before any command hook, so you can create dependencies on artifacts in your steps that are resolved before the actual step is executed. This is ideal for producing an artifact in one job and then downloading it in a different job before execution.
 
 ```yml
 steps:
