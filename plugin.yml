@@ -1,7 +1,8 @@
 name: Artifacts
 description: Upload and download artifacts
 author: https://github.com/buildkite
-requirements: []
+requirements:
+  - bash
 configuration:
   properties:
     upload:
