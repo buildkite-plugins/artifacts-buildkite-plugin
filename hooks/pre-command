@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -euo pipefail
 
 if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   echo "~~~ :hammer: Enabling debug mode"
@@ -18,8 +18,10 @@ fi
 
 paths=()
 
+SINGULAR_DOWNLOAD_OBJECT="false"
+RELOCATION="false"
 
-if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM} ]] && [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO} ]]); then
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] || ([[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]); then
     SINGULAR_DOWNLOAD_OBJECT="true"
     if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] ; then
       paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD")
@@ -52,7 +54,7 @@ if [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
     echo "~~~ Downloading artifacts"
     buildkite-agent artifact download "${source}" "${workdir}"
   fi
-  if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}" ]]; then
+  if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
     if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
         mkdir -p $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}")
     fi
@@ -67,13 +69,13 @@ elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
       do
         source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_FROM"
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_TO"
-        if [[ -n ${!source_env_var} ]] && [[ -n ${!dest_env_var} ]]; then
+        if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
           source="${!source_env_var}"
         else
           source="${path}"
         fi
         buildkite-agent artifact download "${args[@]}" "${source}" "${workdir}"
-        if [[ -n "${!dest_env_var}" ]]; then
+        if [[ -n "${!dest_env_var:-}" ]]; then
           if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
             mkdir -p $(dirname "${!dest_env_var}")
           fi
@@ -89,13 +91,13 @@ elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
       do
         source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_FROM"
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_TO"
-        if [[ -n ${!source_env_var} ]] && [[ -n ${!dest_env_var} ]]; then
+        if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
           source="${!source_env_var}"
         else
           source="${path}"
         fi
         buildkite-agent artifact download "${source}" "${workdir}"
-        if [[ -n "${!dest_env_var}" ]]; then
+        if [[ -n "${!dest_env_var:-}" ]]; then
           if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
             mkdir -p $(dirname "${!dest_env_var}")
           fi

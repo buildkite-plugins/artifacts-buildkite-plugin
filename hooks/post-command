@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -euo pipefail
 
 if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   echo "~~~ :hammer: Enabling debug mode"
@@ -14,13 +14,16 @@ fi
 
 paths=()
 
-if [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD} ]] || ([[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]] && [[ -n ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO} ]]); then
+RELOCATION="false"
+SINGULAR_UPLOAD_OBJECT="false"
+
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] || ([[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO:-}" ]]); then
     SINGULAR_UPLOAD_OBJECT="true"
     if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] ; then
       paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD}")
     elif [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO:-}" ]] ; then
       RELOCATION="true"
-      paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD}_FROM")
+      paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}")
     fi
 fi
 
@@ -38,7 +41,7 @@ trap popd EXIT
 
 if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
   if [[ "${RELOCATION}" == "true" ]]; then
-    if [[ -e ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ]]; then
+    if [[ -e "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]]; then
       echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}]..."
       mv ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM} ${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}
     fi
@@ -64,7 +67,7 @@ elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
       do
         source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
-        if [[ -n ${!source_env_var} ]] && [[ -n ${!dest_env_var} ]]; then
+        if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
           if [[ -e ${!source_env_var} ]]; then
             echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
             mv ${!source_env_var} ${!dest_env_var}
@@ -81,7 +84,7 @@ elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
       do
         source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
         dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
-        if [[ -n ${!source_env_var} ]] && [[ -n ${!dest_env_var} ]]; then
+        if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
           if [[ -e ${!source_env_var} ]]; then
             echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
             mv ${!source_env_var} ${!dest_env_var}
