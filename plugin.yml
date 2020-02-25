@@ -4,11 +4,38 @@ author: https://github.com/buildkite
 requirements:
   - bash
 configuration:
+  definitions:
+    from-to-object:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+      required:
+        - from
+        - to
   properties:
     upload:
-      type: [ string, array ]
+      oneOf:
+        - $ref: '#/definitions/from-to-object'
+        - type: string
+        - type: array
+          items:
+            type: string
+        - type: array
+          items:
+            $ref: '#/definitions/from-to-object'
     download:
-      type: [ string, array ]
+      oneOf:
+        - $ref: '#/definitions/from-to-object'
+        - type: string
+        - type: array
+          items:
+            type: string
+        - type: array
+          items:
+            $ref: '#/definitions/from-to-object'
     step:
       type: string
     build:
