@@ -21,7 +21,7 @@ paths=()
 SINGULAR_DOWNLOAD_OBJECT="false"
 RELOCATION="false"
 
-if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] || ([[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]); then
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] || { [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; }; then
     SINGULAR_DOWNLOAD_OBJECT="true"
     if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] ; then
       paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD")
@@ -56,10 +56,10 @@ if [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
   fi
   if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
     if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
-        mkdir -p $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}")
+        mkdir -p "$(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}")"
     fi
     echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}]..."
-    mv ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM} ${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}
+    mv "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}"
   fi
 elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
   index=0
@@ -77,10 +77,10 @@ elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
         buildkite-agent artifact download "${args[@]}" "${source}" "${workdir}"
         if [[ -n "${!dest_env_var:-}" ]]; then
           if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
-            mkdir -p $(dirname "${!dest_env_var}")
+            mkdir -p "$(dirname "${!dest_env_var}")"
           fi
           echo "~~~ Moving [${source}] to [${!dest_env_var}]..."
-          mv ${source} ${!dest_env_var}
+          mv "${source}" "${!dest_env_var}"
         fi
         ((index+=1))
       done
@@ -99,10 +99,10 @@ elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
         buildkite-agent artifact download "${source}" "${workdir}"
         if [[ -n "${!dest_env_var:-}" ]]; then
           if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
-            mkdir -p $(dirname "${!dest_env_var}")
+            mkdir -p "$(dirname "${!dest_env_var}")"
           fi
           echo "~~~ Moving [${source}] to [${!dest_env_var}]..."
-          mv ${source} ${!dest_env_var}
+          mv "${source}" "${!dest_env_var}"
         fi
         ((index+=1))
       done
