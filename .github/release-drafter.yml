@@ -1,6 +1,11 @@
 # Config for https://github.com/apps/release-drafter
+name-template: 'v$NEXT_MINOR_VERSION (🌈 Insert Release Name)'
+tag-template: 'v$NEXT_MINOR_VERSION'
+categories:
+  - title: 'Dependency Updates'
+    label: 'dependencies'
 template: |
-  ## TODO: Added/Removed/Fixed/Changed
+  ## Changes
 
   $CHANGES
 
@@ -10,8 +15,9 @@ template: |
 
   ```diff
   steps:
-    - plugins:
+    - command: test.sh
+      plugins:
   -     artifacts#$PREVIOUS_TAG:
-  +     artifacts#TODO:
+  +     artifacts#v$NEXT_MINOR_VERSION:
           download: "log/**/*.log"
-  ```
+```
