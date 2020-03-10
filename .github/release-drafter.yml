@@ -20,4 +20,4 @@ template: |
   -     artifacts#$PREVIOUS_TAG:
   +     artifacts#v$NEXT_MINOR_VERSION:
           download: "log/**/*.log"
-```
+  ```
