@@ -10,7 +10,7 @@ This functionality duplicates the [artifact_paths]() property in the pipeline ya
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.2.0:
+    - artifacts#v1.3.0:
         upload: "log/**/*.log"
 ```
 
@@ -20,7 +20,7 @@ or
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.2.0:
+    - artifacts#v1.3.0:
         upload: [ "log/**/*.log", "debug/*.error" ]
 ```
 
@@ -30,7 +30,7 @@ or
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.2.0:
+    - artifacts#v1.3.0:
         upload: 
           from: log1.log
           to: log2.log
@@ -42,7 +42,7 @@ or
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.2.0:
+    - artifacts#v1.3.0:
         upload: 
         - from: log1.log
           to: log2.log
@@ -56,7 +56,7 @@ This downloads artifacts matching globs to the local filesystem. See [downloadin
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.2.0:
+      - artifacts#v1.3.0:
           download: "log/**/*.log"
 ```
 
@@ -66,7 +66,7 @@ or
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.2.0:
+      - artifacts#v1.3.0:
           download: [ "log/**/*.log", "debug/*.error" ]
 ```
 
@@ -76,7 +76,7 @@ or
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.2.0:
+      - artifacts#v1.3.0:
           download: 
             from: log1.log
             to: log2.log
@@ -88,7 +88,7 @@ or
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.2.0:
+      - artifacts#v1.3.0:
           download: 
           - from: log1.log
             to: log2.log
