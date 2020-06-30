@@ -1,4 +1,4 @@
-# Artifacts Buildkite Plugin
+# Artifacts Buildkite Plugin [![Build status](https://badge.buildkite.com/7b0170b44f960e219a66a4f5f09b3490fc0013f189d60b5d1f.svg?branch=master)](https://buildkite.com/buildkite/plugins-artifacts)
 
 A [Buildkite plugin](https://buildkite.com/docs/agent/v3/plugins) for uploading and downloading artifacts.
 
