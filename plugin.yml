@@ -40,6 +40,11 @@ configuration:
       type: string
     build:
       type: string
+    s3-upload-acl:
+      type: string
+    gs-upload-acl:
+      type: string
+
   oneOf:
     - required:
       - upload
