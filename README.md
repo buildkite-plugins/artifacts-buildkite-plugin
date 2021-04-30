@@ -48,6 +48,31 @@ steps:
           to: log2.log
 ```
 
+### User-defined ACL on uploaded files
+When using AWS S3 or Google Cloud Storage as your artifact store, you can optionally define an object-level ACL for your uploaded artifacts. This allows you to have granular control over which artifacts are made public or private.
+
+If not specified it will respect the relevant setting at the agent level.
+
+eg: uploading a public file when using S3
+```yml
+steps:
+  - command: ...
+    plugins:
+    - artifacts#v1.3.0:
+        upload: "coverage-report/**/*"
+        s3-upload-acl: public-read
+```
+
+eg: uploading a private file when using GS
+```yml
+steps:
+  - command: ...
+    plugins:
+    - artifacts#v1.3.0:
+        upload: "coverage-report/**/*"
+        gs-upload-acl: private
+```
+
 ## Downloading artifacts
 
 This downloads artifacts matching globs to the local filesystem. See [downloading artifacts](https://buildkite.com/docs/agent/cli-artifact#downloading-artifacts) for more details.

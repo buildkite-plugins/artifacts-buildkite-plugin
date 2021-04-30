@@ -312,3 +312,35 @@ load '/usr/local/lib/bats/load.bash'
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_JOB
 }
+
+@test "Post-command upload with user-provided S3 object ACL" {
+  stub buildkite-agent \
+    "artifact upload *.log : echo Uploading artifacts"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_S3_UPLOAD_ACL="bucket-owner-read"
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Setting S3 object upload ACL: bucket-owner-read"
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_S3_UPLOAD_ACL
+}
+
+@test "Post-command upload with user-provided GS object ACL" {
+  stub buildkite-agent \
+    "artifact upload *.log : echo Uploading artifacts"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_GS_UPLOAD_ACL="bucketOwnerRead"
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Setting GS object upload ACL: bucketOwnerRead"
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_GS_UPLOAD_ACL
+}
