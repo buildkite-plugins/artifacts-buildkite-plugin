@@ -342,5 +342,5 @@ load '/usr/local/lib/bats/load.bash'
 
   unstub buildkite-agent
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
-  unset BUILDKITE_PLUGIN_ARTIFACTS_S3_UPLOAD_ACL
+  unset BUILDKITE_PLUGIN_ARTIFACTS_GS_UPLOAD_ACL
 }
