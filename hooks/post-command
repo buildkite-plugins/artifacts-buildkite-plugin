@@ -40,6 +40,19 @@ workdir=${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}
 pushd "${workdir}"
 trap popd EXIT
 
+
+# Set user-provided object ACL for AWS S3
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_S3_UPLOAD_ACL:-}" ]] ; then
+  echo "~~~ Setting S3 object upload ACL: ${BUILDKITE_PLUGIN_ARTIFACTS_S3_UPLOAD_ACL}"
+  export BUILDKITE_S3_ACL="${BUILDKITE_PLUGIN_ARTIFACTS_S3_UPLOAD_ACL}"
+fi
+
+# Set user-provided object ACL for Google Cloud Storage
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_GS_UPLOAD_ACL:-}" ]] ; then
+  echo "~~~ Setting GS object upload ACL: ${BUILDKITE_PLUGIN_ARTIFACTS_GS_UPLOAD_ACL}"
+  export BUILDKITE_GS_ACL="${BUILDKITE_PLUGIN_ARTIFACTS_GS_UPLOAD_ACL}"
+fi
+
 if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
   if [[ "${RELOCATION}" == "true" ]]; then
     if [[ -e "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]]; then
