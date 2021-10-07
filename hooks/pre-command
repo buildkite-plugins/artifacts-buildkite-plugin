@@ -51,11 +51,11 @@ if [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
   if [[ "${#args[@]}" -gt 0 ]]; then
     echo "~~~ Downloading artifacts with args: ${args[*]}"
     status=$(buildkite-agent artifact download "${args[@]}" "${source}" "${workdir}" 2>&1 || true)
-    echo $status
+    echo "$status"
   else
     echo "~~~ Downloading artifacts"
     status=$(buildkite-agent artifact download "${source}" "${workdir}" 2>&1 || true)
-    echo $status
+    echo "$status"
   fi
   if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
     if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
@@ -78,7 +78,7 @@ elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
           source="${path}"
         fi
         status=$(buildkite-agent artifact download "${args[@]}" "${source}" "${workdir}" 2>&1 || true)
-        echo $status
+        echo "$status"
         if [[ -n "${!dest_env_var:-}" ]]; then
           if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
             mkdir -p "$(dirname "${!dest_env_var}")"
@@ -101,7 +101,7 @@ elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
           source="${path}"
         fi
         status=$(buildkite-agent artifact download "${source}" "${workdir}" 2>&1 || true)
-        echo $status
+        echo "$status"
         if [[ -n "${!dest_env_var:-}" ]]; then
           if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
             mkdir -p "$(dirname "${!dest_env_var}")"
