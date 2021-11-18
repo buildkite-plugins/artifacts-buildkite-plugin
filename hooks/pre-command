@@ -33,7 +33,7 @@ if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] || { [[ -n "${BUILDKITE_P
 fi
 
 while IFS='=' read -r path _ ; do
-  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+) ]] && ! [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]_TO+) ]]; then
+  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+) ]] && ! [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+_TO) ]]; then
     MULTIPLE_DOWNLOADS="true"
     paths+=("${!path}")
   fi
