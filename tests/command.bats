@@ -179,6 +179,108 @@ load '/usr/local/lib/bats/load.bash'
   unset BUILDKITE_PLUGIN_ARTIFACTS_BUILD
 }
 
+@test "Pre-command downloads multiple > 10 artifacts with build and relocation" {
+  touch /tmp/foo-0.log
+  touch /tmp/foo-1.log
+  touch /tmp/foo-2.log
+  touch /tmp/foo-3.log
+  touch /tmp/foo-4.log
+  touch /tmp/foo-5.log
+  touch /tmp/foo-6.log
+  touch /tmp/foo-7.log
+  touch /tmp/foo-8.log
+  touch /tmp/foo-9.log
+  touch /tmp/foo-10.log
+
+  stub buildkite-agent \
+    "artifact download --build 12345 /tmp/foo-0.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo-1.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo-2.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo-3.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo-4.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo-5.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo-6.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo-7.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo-8.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo-9.log : echo Downloading artifacts with args: --build 12345" \
+    "artifact download --build 12345 /tmp/foo-10.log : echo Downloading artifacts with args: --build 12345"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM="/tmp/foo-0.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_TO="/tmp/foo-r-0.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1_FROM="/tmp/foo-1.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1_TO="/tmp/foo-r-1.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2_FROM="/tmp/foo-2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2_TO="/tmp/foo-r-2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_3_FROM="/tmp/foo-3.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_3_TO="/tmp/foo-r-3.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_4_FROM="/tmp/foo-4.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_4_TO="/tmp/foo-r-4.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_5_FROM="/tmp/foo-5.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_5_TO="/tmp/foo-r-5.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_6_FROM="/tmp/foo-6.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_6_TO="/tmp/foo-r-6.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_7_FROM="/tmp/foo-7.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_7_TO="/tmp/foo-r-7.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_8_FROM="/tmp/foo-8.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_8_TO="/tmp/foo-r-8.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_9_FROM="/tmp/foo-9.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_9_TO="/tmp/foo-r-9.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_10_FROM="/tmp/foo-10.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_10_TO="/tmp/foo-r-10.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_BUILD="12345"
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "Downloading artifacts with args: --build 12345"
+  assert [ -e /tmp/foo-r-0.log ]
+  assert [ ! -e /tmp/foo-0.log ]
+  assert [ -e /tmp/foo-r-1.log ]
+  assert [ ! -e /tmp/foo-1.log ]
+  assert [ -e /tmp/foo-r-2.log ]
+  assert [ ! -e /tmp/foo-2.log ]
+  assert [ -e /tmp/foo-r-3.log ]
+  assert [ ! -e /tmp/foo-3.log ]
+  assert [ -e /tmp/foo-r-4.log ]
+  assert [ ! -e /tmp/foo-4.log ]
+  assert [ -e /tmp/foo-r-5.log ]
+  assert [ ! -e /tmp/foo-5.log ]
+  assert [ -e /tmp/foo-r-6.log ]
+  assert [ ! -e /tmp/foo-6.log ]
+  assert [ -e /tmp/foo-r-7.log ]
+  assert [ ! -e /tmp/foo-7.log ]
+  assert [ -e /tmp/foo-r-8.log ]
+  assert [ ! -e /tmp/foo-8.log ]
+  assert [ -e /tmp/foo-r-9.log ]
+  assert [ ! -e /tmp/foo-9.log ]
+  assert [ -e /tmp/foo-r-10.log ]
+  assert [ ! -e /tmp/foo-10.log ]
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_3_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_3_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_4_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_4_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_5_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_5_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_6_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_6_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_7_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_7_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_8_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_8_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_9_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_9_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_10_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_10_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_BUILD
+}
+
 @test "Post-command uploads artifacts with a single value for upload" {
   stub buildkite-agent \
     "artifact upload *.log : echo Uploading artifacts"
@@ -292,6 +394,107 @@ load '/usr/local/lib/bats/load.bash'
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2
+}
+
+@test "Post-command uploads multiple > 10 artifacts with relocation" {
+  touch /tmp/foo-0.log
+  touch /tmp/foo-1.log
+  touch /tmp/foo-2.log
+  touch /tmp/foo-3.log
+  touch /tmp/foo-4.log
+  touch /tmp/foo-5.log
+  touch /tmp/foo-6.log
+  touch /tmp/foo-7.log
+  touch /tmp/foo-8.log
+  touch /tmp/foo-9.log
+  touch /tmp/foo-10.log
+
+  stub buildkite-agent \
+    "artifact upload /tmp/foo-r-0.log : echo Uploading artifact" \
+    "artifact upload /tmp/foo-r-1.log : echo Uploading artifact" \
+    "artifact upload /tmp/foo-r-2.log : echo Uploading artifact" \
+    "artifact upload /tmp/foo-r-3.log : echo Uploading artifact" \
+    "artifact upload /tmp/foo-r-4.log : echo Uploading artifact" \
+    "artifact upload /tmp/foo-r-5.log : echo Uploading artifact" \
+    "artifact upload /tmp/foo-r-6.log : echo Uploading artifact" \
+    "artifact upload /tmp/foo-r-7.log : echo Uploading artifact" \
+    "artifact upload /tmp/foo-r-8.log : echo Uploading artifact" \
+    "artifact upload /tmp/foo-r-9.log : echo Uploading artifact" \
+    "artifact upload /tmp/foo-r-10.log : echo Uploading artifact"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM="/tmp/foo-0.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO="/tmp/foo-r-0.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1_FROM="/tmp/foo-1.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1_TO="/tmp/foo-r-1.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2_FROM="/tmp/foo-2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2_TO="/tmp/foo-r-2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_3_FROM="/tmp/foo-3.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_3_TO="/tmp/foo-r-3.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_4_FROM="/tmp/foo-4.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_4_TO="/tmp/foo-r-4.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_5_FROM="/tmp/foo-5.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_5_TO="/tmp/foo-r-5.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_6_FROM="/tmp/foo-6.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_6_TO="/tmp/foo-r-6.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_7_FROM="/tmp/foo-7.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_7_TO="/tmp/foo-r-7.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_8_FROM="/tmp/foo-8.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_8_TO="/tmp/foo-r-8.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_9_FROM="/tmp/foo-9.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_9_TO="/tmp/foo-r-9.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_10_FROM="/tmp/foo-10.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_10_TO="/tmp/foo-r-10.log"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+  assert [ -e /tmp/foo-r-0.log ]
+  assert [ ! -e /tmp/foo-0.log ]
+  assert [ -e /tmp/foo-r-1.log ]
+  assert [ ! -e /tmp/foo-1.log ]
+  assert [ -e /tmp/foo-r-2.log ]
+  assert [ ! -e /tmp/foo-2.log ]
+  assert [ -e /tmp/foo-r-3.log ]
+  assert [ ! -e /tmp/foo-3.log ]
+  assert [ -e /tmp/foo-r-4.log ]
+  assert [ ! -e /tmp/foo-4.log ]
+  assert [ -e /tmp/foo-r-5.log ]
+  assert [ ! -e /tmp/foo-5.log ]
+  assert [ -e /tmp/foo-r-6.log ]
+  assert [ ! -e /tmp/foo-6.log ]
+  assert [ -e /tmp/foo-r-7.log ]
+  assert [ ! -e /tmp/foo-7.log ]
+  assert [ -e /tmp/foo-r-8.log ]
+  assert [ ! -e /tmp/foo-8.log ]
+  assert [ -e /tmp/foo-r-9.log ]
+  assert [ ! -e /tmp/foo-9.log ]
+  assert [ -e /tmp/foo-r-10.log ]
+  assert [ ! -e /tmp/foo-10.log ]
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_3_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_3_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_4_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_4_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_5_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_5_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_6_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_6_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_7_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_7_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_8_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_8_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_9_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_9_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_10_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_10_TO
 }
 
 @test "Post-command uploads multiple artifacts with a job" {
