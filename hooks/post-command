@@ -29,7 +29,7 @@ if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] || { [[ -n "${BUILDKITE_PLU
 fi
 
 while IFS='=' read -r path _ ; do
-  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+) ]] && ! [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]_TO+) ]]; then
+  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+) ]] && ! [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+_TO) ]]; then
     MULTIPLE_UPLOADS="true"
     paths+=("${!path}")
   fi

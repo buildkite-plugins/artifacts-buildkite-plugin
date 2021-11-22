@@ -179,6 +179,31 @@ load '/usr/local/lib/bats/load.bash'
   unset BUILDKITE_PLUGIN_ARTIFACTS_BUILD
 }
 
+@test "Pre-command downloads multiple > 10 artifacts with build and relocation" {
+  export BUILDKITE_PLUGIN_ARTIFACTS_BUILD="12345"
+  stub_calls=()
+  for i in $(seq 0 10); do
+    touch "/tmp/foo-$i.log"
+    export "BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${i}_FROM=/tmp/foo-${i}.log"
+    export "BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${i}_TO=/tmp/foo-r-${i}.log"
+    stub_calls+=( "artifact download --build 12345 /tmp/foo-$i.log : echo Downloading artifacts with args: --build 12345" )
+  done
+  stub buildkite-agent "${stub_calls[@]}"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "Downloading artifacts with args: --build 12345"
+  for i in $(seq 0 10); do
+    assert [ -e /tmp/foo-r-"${i}".log ]
+    assert [ ! -e /tmp/foo-"${i}".log ]
+    unset "BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${i}_FROM"
+    unset "BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${i}_TO"
+  done
+  unset BUILDKITE_PLUGIN_ARTIFACTS_BUILD
+  unstub buildkite-agent
+}
+
 @test "Post-command uploads artifacts with a single value for upload" {
   stub buildkite-agent \
     "artifact upload *.log : echo Uploading artifacts"
@@ -292,6 +317,29 @@ load '/usr/local/lib/bats/load.bash'
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2
+}
+
+@test "Post-command uploads multiple > 10 artifacts with relocation" {
+  stub_calls=()
+  for i in $(seq 0 10); do
+    touch "/tmp/foo-${i}.log"
+    export "BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${i}_FROM=/tmp/foo-${i}.log"
+    export "BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${i}_TO=/tmp/foo-r-${i}.log"
+    stub_calls+=( "artifact upload /tmp/foo-r-$i.log : echo Uploading artifact" )
+  done
+  stub buildkite-agent "${stub_calls[@]}"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+  for i in $(seq 0 10); do
+    assert [ -e /tmp/foo-r-"${i}".log ]
+    assert [ ! -e /tmp/foo-"${i}".log ]
+    unset "BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${i}_FROM"
+    unset "BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${i}_TO"
+  done
+  unstub buildkite-agent
 }
 
 @test "Post-command uploads multiple artifacts with a job" {
