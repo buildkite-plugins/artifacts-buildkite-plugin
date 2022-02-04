@@ -156,6 +156,6 @@ Or if you want to run just the tests, you can use the [Docker Compose CLI](https
 docker-compose run --rm tests
 ```
 
-## License
+## License Free
 
 MIT (see [LICENSE](LICENSE))
