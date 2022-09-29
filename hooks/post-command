@@ -53,6 +53,12 @@ if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_GS_UPLOAD_ACL:-}" ]] ; then
   export BUILDKITE_GS_ACL="${BUILDKITE_PLUGIN_ARTIFACTS_GS_UPLOAD_ACL}"
 fi
 
+if [[ "${#args[@]}" -gt 1 ]]; then
+  EXTRA_MESSAGE="(extra args: '${args[@]:1}')"
+else
+  EXTRA_MESSAGE=""
+fi
+
 if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
   if [[ "${RELOCATION}" == "true" ]]; then
     if [[ -e "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]]; then
@@ -64,12 +70,12 @@ if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
     path="${paths[0]}"
   fi
 
-  echo "~~~ Uploading artifacts (extra args: '${args[@]:1}')"
+  echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
   buildkite-agent artifact "${args[@]}" "${path}"
 
 elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
   index=0
-  echo "~~~ Uploading artifacts (extra args: '${args[@]:1}')"
+  echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
 
   for path in "${paths[@]}"; do
     source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
