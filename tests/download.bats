@@ -154,7 +154,7 @@ load '/usr/local/lib/bats/load.bash'
 
 @test "Pre-command downloads multiple artifacts with build and relocation" {
   stub buildkite-agent \
-    "artifact download --build 12345 \* : touch /tmp/foo.log; echo downloaded artifact \$5 with --build 12345" \
+    "artifact download --build 12345 \* \* : touch /tmp/foo.log; echo downloaded artifact \$5 to $6 with --build 12345" \
     "artifact download --build 12345 \* \* : echo downloaded artifact \$5 to \$6 with --build 12345"
 
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM="/tmp/foo.log"
