@@ -110,9 +110,8 @@ load '/usr/local/lib/bats/load.bash'
 }
 
 @test "Pre-command downloads multiple artifacts with some relocation" {
-  touch /tmp/foo.log
   stub buildkite-agent \
-    "artifact download \* \* : echo downloaded artifact \$3 to \$4" \
+    "artifact download \* \* : touch /tmp/foo.log; echo downloaded artifact \$3 to \$4" \
     "artifact download \* \* : echo downloaded artifact \$3 to \$4" \
     "artifact download \* \* : echo downloaded artifact \$3 to \$4"
 
@@ -154,9 +153,8 @@ load '/usr/local/lib/bats/load.bash'
 }
 
 @test "Pre-command downloads multiple artifacts with build and relocation" {
-  touch /tmp/foo.log
   stub buildkite-agent \
-    "artifact download --build 12345 \* : echo downloaded artifact \$5 with --build 12345" \
+    "artifact download --build 12345 \* : touch /tmp/foo.log; echo downloaded artifact \$5 with --build 12345" \
     "artifact download --build 12345 \* \* : echo downloaded artifact \$5 to \$6 with --build 12345"
 
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM="/tmp/foo.log"
@@ -181,10 +179,9 @@ load '/usr/local/lib/bats/load.bash'
   export BUILDKITE_PLUGIN_ARTIFACTS_BUILD="12345"
   stub_calls=()
   for i in $(seq 0 10); do
-    touch "/tmp/foo-$i.log"
     export "BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${i}_FROM=/tmp/foo-${i}.log"
     export "BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${i}_TO=/tmp/foo-r-${i}.log"
-    stub_calls+=( "artifact download --build 12345 \* : echo downloaded artifact \$5 with --build 12345" )
+    stub_calls+=( "artifact download --build 12345 \* \* : touch /tmp/foo-$i.log; echo downloaded artifact \$5 to \$6 with --build 12345" )
   done
   stub buildkite-agent "${stub_calls[@]}"
 
