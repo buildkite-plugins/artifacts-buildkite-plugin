@@ -54,7 +54,7 @@ if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_GS_UPLOAD_ACL:-}" ]] ; then
 fi
 
 if [[ "${#args[@]}" -gt 1 ]]; then
-  EXTRA_MESSAGE="(extra args: '${args[@]:1}')"
+  EXTRA_MESSAGE="(extra args: '${args[*]:1}')"
 else
   EXTRA_MESSAGE=""
 fi

@@ -40,7 +40,7 @@ while IFS='=' read -r path _ ; do
 done < <(env | sort)
 
 if [[ "${#args[@]}" -gt 1 ]]; then
-  EXTRA_MESSAGE="(extra args: '${args[@]:1}')"
+  EXTRA_MESSAGE="(extra args: '${args[*]:1}')"
 else
   EXTRA_MESSAGE=""
 fi
