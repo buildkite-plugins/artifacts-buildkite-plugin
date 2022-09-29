@@ -6,7 +6,7 @@ if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   set -x
 fi
 
-args=()
+args=("upload")
 
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_JOB:-}" ]] ; then
   args+=("--job" "${BUILDKITE_PLUGIN_ARTIFACTS_JOB}")
@@ -64,49 +64,24 @@ if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
     path="${paths[0]}"
   fi
 
-  if [ "${#args[@]}" -gt 0 ]; then
-    echo "~~~ Uploading artifacts with args: ${args[*]}"
-    buildkite-agent artifact upload "${args[@]}" "${path}"
-  else
-    echo "~~~ Uploading artifacts"
-    buildkite-agent artifact upload "${path}"
-  fi
+  echo "~~~ Uploading artifacts (extra args: '${args[@]:1}')"
+  buildkite-agent artifact "${args[@]}" "${path}"
 
 elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
   index=0
-  if [ "${#args[@]}" -gt 0 ]; then
-    echo "~~~ Uploading artifacts with args: ${args[*]}"
+  echo "~~~ Uploading artifacts (extra args: '${args[@]:1}')"
 
-    for path in "${paths[@]}"
-      do
-        source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
-        dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
-        if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
-          if [[ -e ${!source_env_var} ]]; then
-            echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-            mv ${!source_env_var} ${!dest_env_var}
-          fi
-          path="${!dest_env_var}"
-        fi
-        buildkite-agent artifact upload "${args[@]}" "$path"
-        ((index+=1))
-      done
-  else
-    echo "~~~ Uploading artifacts"
-
-    for path in "${paths[@]}"
-      do
-        source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
-        dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
-        if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
-          if [[ -e ${!source_env_var} ]]; then
-            echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-            mv ${!source_env_var} ${!dest_env_var}
-          fi
-          path="${!dest_env_var}"
-        fi
-        buildkite-agent artifact upload "$path"
-        ((index+=1))
-      done
-  fi
+  for path in "${paths[@]}"; do
+    source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
+    dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
+    if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
+      if [[ -e ${!source_env_var} ]]; then
+        echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
+        mv ${!source_env_var} ${!dest_env_var}
+      fi
+      path="${!dest_env_var}"
+    fi
+    buildkite-agent artifact "${args[@]}" "$path"
+    ((index+=1))
+  done
 fi
