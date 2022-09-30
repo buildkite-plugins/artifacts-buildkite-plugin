@@ -13,19 +13,34 @@ if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_JOB:-}" ]] ; then
 fi
 
 paths=()
+compress=()
 
+COMPRESSED="false"
 RELOCATION="false"
 SINGULAR_UPLOAD_OBJECT="false"
 MULTIPLE_UPLOADS="false"
 
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
+  COMPRESSED="true"
+
+  if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.zip ]]; then
+    compress+=("zip" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
+  elif [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.tgz ]]; then
+    compress+=("tar czf" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
+  else
+    echo "+++ 🚨 The inferred compression file format for the artifact is not currently supported"
+    exit 1
+  fi
+fi
+
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] || { [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO:-}" ]]; }; then
-    SINGULAR_UPLOAD_OBJECT="true"
-    if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] ; then
-      paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD}")
-    elif [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO:-}" ]] ; then
-      RELOCATION="true"
-      paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}")
-    fi
+  SINGULAR_UPLOAD_OBJECT="true"
+  if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] ; then
+    paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD}")
+  elif [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO:-}" ]] ; then
+    RELOCATION="true"
+    paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}")
+  fi
 fi
 
 while IFS='=' read -r path _ ; do
@@ -70,6 +85,12 @@ if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
     path="${paths[0]}"
   fi
 
+  if [[ "${COMPRESSED}" == "true" ]]; then
+    echo "~~~ Compressing ${path} to ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+    "${compress[@]}" "${path}"
+    path=" ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+  fi
+
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
   buildkite-agent artifact "${args[@]}" "${path}"
 
@@ -87,6 +108,13 @@ elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
       fi
       path="${!dest_env_var}"
     fi
+
+    if [[ "${COMPRESSED}" == "true" ]]; then
+      echo "~~~ Compressing ${path} to ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+      "${compress[@]}" "${path}"
+      path=" ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+    fi
+
     buildkite-agent artifact "${args[@]}" "$path"
     ((index+=1))
   done
