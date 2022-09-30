@@ -44,7 +44,9 @@ configuration:
       type: string
     gs-upload-acl:
       type: string
-
+    compressed:
+      type: string
+      pattern: '.*(.zip|.tgz)$'
   oneOf:
     - required:
       - upload
