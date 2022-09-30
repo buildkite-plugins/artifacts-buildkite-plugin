@@ -137,6 +137,35 @@ The job UUID or name to download the artifact from.
 
 The build UUID to download the artifact from.
 
+### `compressed` (optional, string)
+
+Limitations:
+* filename needs to end with `.zip` or `.tgz` and that will determine the compression executable to use
+* can not be used with `from`/`to` upload or download options
+
+When uploading, globs specified in the `upload` option will be compressed in a single file with this name and uploaded as a single artifact. The following example will get all files matching `log/**.*.log`, zip them up and upload a single artifact file named `logs.zip`:
+
+```yml
+steps:
+  - command: ...
+    plugins:
+    - artifacts#v1.5.0:
+        upload: "log/**/*.log"
+        compressed: logs.zip
+```
+
+When downloading, this option states the actual name of the artifact to be downloaded and globs in the `download` option will be extracted off of it. The following example will download the `logs.tgz` artifact and extract all files in it matching `logs/**/*.log`:
+
+```yml
+steps:
+  - command: ...
+    plugins:
+      - artifacts#v1.5.0:
+          download: "log/**/*.log"
+          compressed: logs.tgz
+```
+
+
 ### Relocation
 
 If a file needs to be renamed or moved before upload or after download, a nested object is used with `to` and `from` keys.
