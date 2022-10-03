@@ -111,7 +111,7 @@ elif [[ "${COMPRESSED}" == "true" ]]; then
     ((index+=1))
   done
 
-  echo "~~~ Compressing ${final_paths[@]} to ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+  echo "~~~ Compressing ${final_paths[*]} to ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
   "${compress[@]}" "${final_paths[@]}"
 
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"

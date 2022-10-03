@@ -66,7 +66,7 @@ if [[ "${COMPRESSED}" == "true" ]]; then
   buildkite-agent artifact "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" "${workdir}"
 
 
-  echo "~~~ Uncompressing ${paths[@]} from ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+  echo "~~~ Uncompressing ${paths[*]} from ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
   "${compress[@]}" "${paths[@]}"
 
   # single relocation
