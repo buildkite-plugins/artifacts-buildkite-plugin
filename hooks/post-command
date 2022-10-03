@@ -26,7 +26,7 @@ if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
   if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.zip ]]; then
     compress+=("zip" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
   elif [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.tgz ]]; then
-    compress+=("tar czf" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
+    compress+=("tar" "czf" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
   else
     echo "+++ 🚨 The inferred compression file format for the artifact is not currently supported"
     exit 1
