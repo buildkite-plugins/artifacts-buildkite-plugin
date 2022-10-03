@@ -69,6 +69,16 @@ if [[ "${COMPRESSED}" == "true" ]]; then
   echo "~~~ Uncompressing ${paths[@]} from ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
   "${compress[@]}" "${paths[@]}"
 
+  # single relocation
+  if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
+    if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
+        mkdir -p "$(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}")"
+    fi
+    echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}]..."
+    mv "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}"
+  fi
+
+  # multiple relocations
   index=0
   for path in "${paths[@]}"; do
     source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_FROM"
@@ -83,6 +93,7 @@ if [[ "${COMPRESSED}" == "true" ]]; then
  
     ((index+=1))
   done
+
 elif [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
   if [[ "${RELOCATION}" == "true" ]]; then
     source="${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}"
