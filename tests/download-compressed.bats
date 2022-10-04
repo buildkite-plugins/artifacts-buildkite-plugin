@@ -371,3 +371,35 @@ load '/usr/local/lib/bats/load.bash'
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
 }
+
+
+@test "Do nothing if there is no download-specific vars setup" {
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="whatever"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  refute_output --partial "Downloading artifacts"
+}
+
+@test "Pre-command does nothing if there is upload-specific vars setup" {
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="test.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0="test2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM="test3.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO="test4.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM="test5.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO="test6.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="whatever"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  refute_output --partial "Downloading artifacts"
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO
+}

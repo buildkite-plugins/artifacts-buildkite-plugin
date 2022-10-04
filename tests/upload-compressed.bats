@@ -332,3 +332,37 @@ load '/usr/local/lib/bats/load.bash'
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
 }
+
+@test "Post-command does nothing if no vars are set" {
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="whatever"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  refute_output --partial "Uploading artifacts"
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+}
+
+@test "Post-command does nothing if there is download-specific vars setup" {
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="test.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0="test2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM="test3.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO="test4.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM="test5.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_TO="test6.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="whatever"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  refute_output --partial "Uploading artifacts"
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_TO
+  unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+}
