@@ -24,18 +24,6 @@ SINGULAR_DOWNLOAD_OBJECT="false"
 RELOCATION="false"
 MULTIPLE_DOWNLOADS="false"
 
-if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
-  COMPRESSED="true"
-  if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.zip ]]; then
-    compress+=("unzip" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
-  elif [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.tgz ]]; then
-    compress+=("tar" "xzf" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
-  else
-    echo "+++ 🚨 The inferred compression file format for the artifact is not currently supported"
-    exit 1
-  fi
-fi
-
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] || { [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; }; then
     SINGULAR_DOWNLOAD_OBJECT="true"
     if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] ; then
@@ -52,6 +40,23 @@ while IFS='=' read -r path _ ; do
     paths+=("${!path}")
   fi
 done < <(env | sort)
+
+if [[ "${#paths[@]}" -le 0 ]]; then
+  # no download data
+  exit 0
+fi
+
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
+  COMPRESSED="true"
+  if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.zip ]]; then
+    compress+=("unzip" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
+  elif [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.tgz ]]; then
+    compress+=("tar" "xzf" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
+  else
+    echo "+++ 🚨 The inferred compression file format for the artifact is not currently supported"
+    exit 1
+  fi
+fi
 
 if [[ "${#args[@]}" -gt 1 ]]; then
   EXTRA_MESSAGE="(extra args: '${args[*]:1}')"
