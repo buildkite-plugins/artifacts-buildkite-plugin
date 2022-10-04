@@ -141,7 +141,6 @@ The build UUID to download the artifact from.
 
 Limitations:
 * filename needs to end with `.zip` or `.tgz` and that will determine the compression executable to use
-* can not be used with `from`/`to` upload or download options
 
 When uploading, globs specified in the `upload` option will be compressed in a single file with this name and uploaded as a single artifact. The following example will get all files matching `log/**.*.log`, zip them up and upload a single artifact file named `logs.zip`:
 
