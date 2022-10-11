@@ -154,7 +154,7 @@ steps:
         compressed: logs.zip
 ```
 
-When downloading, this option states the actual name of the artifact to be downloaded and globs in the `download` option will be extracted off of it. The following example will download the `logs.tgz` artifact and extract all files in it matching `logs/*.log`:
+When downloading, this option states the actual name of the artifact to be downloaded and globs in the `download` option will be extracted off of it. The following example will download the `logs.tgz` artifact and extract all files in it matching `log/*.log`:
 
 ```yml
 steps:
