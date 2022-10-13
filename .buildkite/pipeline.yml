@@ -11,3 +11,39 @@ steps:
     plugins:
       - shellcheck#v1.3.0:
           files: hooks/**
+
+  - wait
+
+  - label: test uploading
+    key: upload
+    command: echo 'testing artifact upload'
+    plugins:
+      ${BUILDKITE_PULL_REQUEST_REPO:-$BUILDKITE_REPO}#${BUILDKITE_COMMIT}:
+        upload: '.buildkite/pipeline.yml'
+    
+  - label: test compressed uploading
+    key: upload-compressed
+    command: echo 'testing compressed artifact upload'
+    plugins:
+      ${BUILDKITE_PULL_REQUEST_REPO:-$BUILDKITE_REPO}#${BUILDKITE_COMMIT}:
+        upload: '.buildkite/pipeline.yml'
+        compressed: artifact.tgz
+  
+  - label: test downloading
+    depends_on: upload
+    plugins:
+      ${BUILDKITE_PULL_REQUEST_REPO:-$BUILDKITE_REPO}#${BUILDKITE_COMMIT}:
+        download:
+          from: '.buildkite/pipeline.yml'
+          to: 'test-pipeline.yml'
+    command: test -e test-pipeline.yml
+    
+  - label: test compressed downloading
+    depends_on: upload-compressed
+    plugins:
+      ${BUILDKITE_PULL_REQUEST_REPO:-$BUILDKITE_REPO}#${BUILDKITE_COMMIT}:
+        download:
+          from: '.buildkite/pipeline.yml'
+          to: 'test-pipeline.yml'
+        compressed: artifact.tgz
+    command: test -e test-pipeline.yml
