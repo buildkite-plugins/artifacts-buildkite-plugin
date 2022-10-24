@@ -23,6 +23,7 @@ COMPRESSED="false"
 SINGULAR_DOWNLOAD_OBJECT="false"
 RELOCATION="false"
 MULTIPLE_DOWNLOADS="false"
+IGNORE_ERRORS="${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"}"
 
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] || { [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; }; then
     SINGULAR_DOWNLOAD_OBJECT="true"
@@ -52,7 +53,32 @@ bk_agent() {
       echo "Ignoring error in download"
     else
       echo "Error in download"
-      exit 1
+      return 1
+    fi
+  fi
+
+  return 0
+}
+
+handle_relocation() {
+  local index="$1"
+  local var_string=""
+  if [[ -n "${index}" ]]; then
+    var_string="${index}_"
+  fi
+
+  source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${var_string}FROM"
+  dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${var_string}TO"
+  if [[ -n "${!dest_env_var:-}" ]]; then
+    if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
+      mkdir -p "$(dirname "${!dest_env_var}")"
+    fi
+
+    if [[ ! -e "${!source_env_var}" ]] && [[ ${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"} != "false" ]]; then
+      echo "Ignoring missing file ${!source_env_var} for relocation"
+    else
+      echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
+      mv "${!source_env_var}" "${!dest_env_var}"
     fi
   fi
 }
@@ -86,26 +112,13 @@ if [[ "${COMPRESSED}" == "true" ]]; then
 
   # single relocation
   if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
-    if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
-        mkdir -p "$(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}")"
-    fi
-    echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}]..."
-    mv "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}"
+    handle_relocation ""
   fi
 
   # multiple relocations
   index=0
   for path in "${paths[@]}"; do
-    source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_FROM"
-    dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_TO"
-    if [[ -n "${!dest_env_var:-}" ]]; then
-      if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
-        mkdir -p "$(dirname "${!dest_env_var}")"
-      fi
-      echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-      mv "${!source_env_var}" "${!dest_env_var}"
-    fi
- 
+    handle_relocation "${index}"
     ((index+=1))
   done
 
@@ -120,11 +133,7 @@ elif [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
   bk_agent "${args[@]}" "${source}" "${workdir}"
 
   if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
-    if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
-        mkdir -p "$(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}")"
-    fi
-    echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}]..."
-    mv "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}"
+    handle_relocation ""
   fi
 elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
   index=0
@@ -139,13 +148,7 @@ elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
       source="${path}"
     fi
     bk_agent "${args[@]}" "${source}" "${workdir}"
-    if [[ -n "${!dest_env_var:-}" ]]; then
-      if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
-        mkdir -p "$(dirname "${!dest_env_var}")"
-      fi
-      echo "~~~ Moving [${source}] to [${!dest_env_var}]..."
-      mv "${source}" "${!dest_env_var}"
-    fi
+    handle_relocation "${index}"
     ((index+=1))
   done
 fi
