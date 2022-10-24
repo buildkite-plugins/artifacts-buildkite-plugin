@@ -10,7 +10,7 @@ This functionality duplicates the [artifact_paths](https://buildkite.com/docs/pi
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.5.0:
+    - artifacts#v1.7.0:
         upload: "log/**/*.log"
 ```
 
@@ -20,7 +20,7 @@ or
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.5.0:
+    - artifacts#v1.7.0:
         upload: [ "log/**/*.log", "debug/*.error" ]
 ```
 
@@ -30,7 +30,7 @@ or
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.5.0:
+    - artifacts#v1.7.0:
         upload: 
           from: log1.log
           to: log2.log
@@ -42,7 +42,7 @@ or
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.5.0:
+    - artifacts#v1.7.0:
         upload: 
         - from: log1.log
           to: log2.log
@@ -58,7 +58,7 @@ eg: uploading a public file when using S3
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.5.0:
+    - artifacts#v1.7.0:
         upload: "coverage-report/**/*"
         s3-upload-acl: public-read
 ```
@@ -68,7 +68,7 @@ eg: uploading a private file when using GS
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.5.0:
+    - artifacts#v1.7.0:
         upload: "coverage-report/**/*"
         gs-upload-acl: private
 ```
@@ -81,7 +81,7 @@ This downloads artifacts matching globs to the local filesystem. See [downloadin
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.5.0:
+      - artifacts#v1.7.0:
           download: "log/**/*.log"
 ```
 
@@ -91,7 +91,7 @@ or
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.5.0:
+      - artifacts#v1.7.0:
           download: [ "log/**/*.log", "debug/*.error" ]
 ```
 
@@ -101,7 +101,7 @@ or
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.5.0:
+      - artifacts#v1.7.0:
           download: 
             from: log1.log
             to: log2.log
@@ -113,7 +113,7 @@ or
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.5.0:
+      - artifacts#v1.7.0:
           download: 
           - from: log1.log
             to: log2.log
@@ -149,7 +149,7 @@ When uploading, globs specified in the `upload` option will be compressed in a s
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.5.0:
+    - artifacts#v1.7.0:
         upload: "log/*.log"
         compressed: logs.zip
 ```
@@ -160,7 +160,7 @@ When downloading, this option states the actual name of the artifact to be downl
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.5.0:
+      - artifacts#v1.7.0:
           download: "log/*.log"
           compressed: logs.tgz
 ```
