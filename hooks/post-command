@@ -60,6 +60,16 @@ workdir=${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}
 pushd "${workdir}"
 trap popd EXIT
 
+bk_agent() {
+  if ! buildkite-agent artifact "${@}"; then
+    if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"}" != "false" ]]; then
+      echo "Ignoring error in upload"
+    else
+      echo "Error in upload"
+      exit 1
+    fi
+  fi
+}
 
 # Set user-provided object ACL for AWS S3
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_S3_UPLOAD_ACL:-}" ]] ; then
@@ -97,7 +107,7 @@ if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
   fi
 
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
-  buildkite-agent artifact "${args[@]}" "${path}"
+  bk_agent "${args[@]}" "${path}"
 elif [[ "${COMPRESSED}" == "true" ]]; then
   final_paths=()
   index=0
@@ -120,7 +130,7 @@ elif [[ "${COMPRESSED}" == "true" ]]; then
   "${compress[@]}" "${final_paths[@]}"
 
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
-  buildkite-agent artifact "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+  bk_agent "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
 elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
   index=0
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
@@ -136,7 +146,7 @@ elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
       path="${!dest_env_var}"
     fi
 
-    buildkite-agent artifact "${args[@]}" "$path"
+    bk_agent "${args[@]}" "$path"
     ((index+=1))
   done
 fi

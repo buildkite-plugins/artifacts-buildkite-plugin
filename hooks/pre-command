@@ -46,6 +46,17 @@ if [[ "${#paths[@]}" -le 0 ]]; then
   exit 0
 fi
 
+bk_agent() {
+  if ! buildkite-agent artifact "${@}"; then
+    if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"}" != "false" ]]; then
+      echo "Ignoring error in download"
+    else
+      echo "Error in download"
+      exit 1
+    fi
+  fi
+}
+
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
   COMPRESSED="true"
   if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.zip ]]; then
@@ -68,8 +79,7 @@ workdir="${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}"
 
 if [[ "${COMPRESSED}" == "true" ]]; then
   echo "~~~ Downloading artifacts ${EXTRA_MESSAGE}"
-  buildkite-agent artifact "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" "${workdir}"
-
+  bk_agent "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" "${workdir}"
 
   echo "~~~ Uncompressing ${paths[*]} from ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
   "${compress[@]}" "${paths[@]}"
@@ -107,7 +117,7 @@ elif [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
   fi
 
   echo "~~~ Downloading artifacts ${EXTRA_MESSAGE}"
-  buildkite-agent artifact "${args[@]}" "${source}" "${workdir}"
+  bk_agent "${args[@]}" "${source}" "${workdir}"
 
   if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
     if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
@@ -128,7 +138,7 @@ elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
     else
       source="${path}"
     fi
-    buildkite-agent artifact "${args[@]}" "${source}" "${workdir}"
+    bk_agent "${args[@]}" "${source}" "${workdir}"
     if [[ -n "${!dest_env_var:-}" ]]; then
       if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
         mkdir -p "$(dirname "${!dest_env_var}")"
