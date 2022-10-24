@@ -49,9 +49,9 @@ fi
 bk_agent() {
   if ! buildkite-agent artifact "${@}"; then
     if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"}" != "false" ]]; then
-      echo "Ignoring error in download"
+      echo "Ignoring error in download of" "${@: -2}"
     else
-      echo "Error in download"
+      echo "Error in download of" "${@: -2}"
       return 1
     fi
   fi

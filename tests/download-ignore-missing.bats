@@ -19,7 +19,7 @@ setup() {
 
   assert_success
   assert_output --partial "Downloading artifacts"
-  assert_output --partial "Ignoring error in download"
+  assert_output --partial "Ignoring error in download of *.log"
 
   unstub buildkite-agent
 }
@@ -35,7 +35,7 @@ setup() {
 
   assert_success
   assert_output --partial "Downloading artifacts"
-  assert_output --partial "Ignoring error in download"
+  assert_output --partial "Ignoring error in download of /tmp/foo.log"
   assert_output --partial "Ignoring missing file /tmp/foo.log for relocation"
 
   unstub buildkite-agent
@@ -55,7 +55,7 @@ setup() {
 
   assert_success
   assert_output --partial "Downloading artifacts"
-  assert_output --partial "Ignoring error in download"
+  assert_output --partial "Ignoring error in download of bar.log"
   refute_output --partial "download artifact bar.log"
 
   unstub buildkite-agent
@@ -76,7 +76,7 @@ setup() {
 
   assert_success
   assert_output --partial "Downloading artifacts"
-  assert_output --partial "Ignoring error in download"
+  assert_output --partial "Ignoring error in download of bar.log"
   refute_output --partial "download artifact bar.log"
 
   assert [ -e /tmp/foo2.log ]
@@ -101,7 +101,7 @@ setup() {
 
   assert_success
   assert_output --partial "Downloading artifacts"
-  assert_output --partial "Ignoring error in download"
+  assert_output --partial "Ignoring error in download of /tmp/foo.log"
   assert_output --partial "Ignoring missing file /tmp/foo.log for relocation"
   refute_output --partial "download artifact /tmp/foo.log"
 
@@ -138,6 +138,7 @@ setup() {
     else
       assert [ ! -e /tmp/foo-r-"${i}".log ]
       assert [ ! -e /tmp/foo-"${i}".log ]
+      assert_output --partial "Ignoring error in download of /tmp/foo-${i}.log"
       assert_output --partial "Ignoring missing file /tmp/foo-${i}.log"
       refute_output --partial "downloaded artifact /tmp/foo-${i}.log"
     fi
