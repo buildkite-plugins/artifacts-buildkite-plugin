@@ -63,9 +63,9 @@ trap popd EXIT
 bk_agent() {
   if ! buildkite-agent artifact "${@}"; then
     if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"}" != "false" ]]; then
-      echo "Ignoring error in upload"
+      echo "Ignoring error in upload of" "${@: -1}"
     else
-      echo "Error in upload"
+      echo "Error in upload of" "${@:-1}"
       exit 1
     fi
   fi
@@ -84,7 +84,7 @@ handle_relocation() {
   if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
     if [[ -e ${!source_env_var} ]]; then
       echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-      mv ${!source_env_var} ${!dest_env_var}
+      mv "${!source_env_var}" "${!dest_env_var}"
     elif [[ ${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"} == "true" ]]; then
       echo "Ignoring missing file ${!source_env_var} for relocation"
     fi
