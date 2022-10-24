@@ -47,6 +47,8 @@ configuration:
     compressed:
       type: string
       pattern: '.*(.zip|.tgz)$'
+    ignore-missing:
+      type: boolean
   oneOf:
     - required:
       - upload
