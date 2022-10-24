@@ -46,6 +46,42 @@ if [[ "${#paths[@]}" -le 0 ]]; then
   exit 0
 fi
 
+bk_agent() {
+  if ! buildkite-agent artifact "${@}"; then
+    if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"}" != "false" ]]; then
+      echo "Ignoring error in download of" "${@: -2}"
+    else
+      echo "Error in download of" "${@: -2}"
+      return 1
+    fi
+  fi
+
+  return 0
+}
+
+handle_relocation() {
+  local index="$1"
+  local var_string=""
+  if [[ -n "${index}" ]]; then
+    var_string="${index}_"
+  fi
+
+  source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${var_string}FROM"
+  dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${var_string}TO"
+  if [[ -n "${!dest_env_var:-}" ]]; then
+    if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
+      mkdir -p "$(dirname "${!dest_env_var}")"
+    fi
+
+    if [[ ! -e "${!source_env_var}" ]] && [[ ${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"} != "false" ]]; then
+      echo "Ignoring missing file ${!source_env_var} for relocation"
+    else
+      echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
+      mv "${!source_env_var}" "${!dest_env_var}"
+    fi
+  fi
+}
+
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
   COMPRESSED="true"
   if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.zip ]]; then
@@ -68,34 +104,20 @@ workdir="${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}"
 
 if [[ "${COMPRESSED}" == "true" ]]; then
   echo "~~~ Downloading artifacts ${EXTRA_MESSAGE}"
-  buildkite-agent artifact "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" "${workdir}"
-
+  bk_agent "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" "${workdir}"
 
   echo "~~~ Uncompressing ${paths[*]} from ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
   "${compress[@]}" "${paths[@]}"
 
   # single relocation
   if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
-    if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
-        mkdir -p "$(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}")"
-    fi
-    echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}]..."
-    mv "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}"
+    handle_relocation ""
   fi
 
   # multiple relocations
   index=0
   for path in "${paths[@]}"; do
-    source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_FROM"
-    dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_TO"
-    if [[ -n "${!dest_env_var:-}" ]]; then
-      if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
-        mkdir -p "$(dirname "${!dest_env_var}")"
-      fi
-      echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-      mv "${!source_env_var}" "${!dest_env_var}"
-    fi
- 
+    handle_relocation "${index}"
     ((index+=1))
   done
 
@@ -107,14 +129,10 @@ elif [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
   fi
 
   echo "~~~ Downloading artifacts ${EXTRA_MESSAGE}"
-  buildkite-agent artifact "${args[@]}" "${source}" "${workdir}"
+  bk_agent "${args[@]}" "${source}" "${workdir}"
 
   if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
-    if ! [[ -d $(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}") ]]; then
-        mkdir -p "$(dirname "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}")"
-    fi
-    echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}]..."
-    mv "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO}"
+    handle_relocation ""
   fi
 elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
   index=0
@@ -128,14 +146,8 @@ elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
     else
       source="${path}"
     fi
-    buildkite-agent artifact "${args[@]}" "${source}" "${workdir}"
-    if [[ -n "${!dest_env_var:-}" ]]; then
-      if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
-        mkdir -p "$(dirname "${!dest_env_var}")"
-      fi
-      echo "~~~ Moving [${source}] to [${!dest_env_var}]..."
-      mv "${source}" "${!dest_env_var}"
-    fi
+    bk_agent "${args[@]}" "${source}" "${workdir}"
+    handle_relocation "${index}"
     ((index+=1))
   done
 fi

@@ -60,6 +60,36 @@ workdir=${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}
 pushd "${workdir}"
 trap popd EXIT
 
+bk_agent() {
+  if ! buildkite-agent artifact "${@}"; then
+    if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"}" != "false" ]]; then
+      echo "Ignoring error in upload of" "${@: -1}"
+    else
+      echo "Error in upload of" "${@:-1}"
+      exit 1
+    fi
+  fi
+}
+
+handle_relocation() {
+  local index="$1"
+  local var_string=""
+  if [[ -n "${index}" ]]; then
+    var_string="${index}_"
+  fi
+
+  source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${var_string}FROM"
+  dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${var_string}TO"
+
+  if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
+    if [[ -e ${!source_env_var} ]]; then
+      echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
+      mv "${!source_env_var}" "${!dest_env_var}"
+    elif [[ ${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"} == "true" ]]; then
+      echo "Ignoring missing file ${!source_env_var} for relocation"
+    fi
+  fi
+}
 
 # Set user-provided object ACL for AWS S3
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_S3_UPLOAD_ACL:-}" ]] ; then
@@ -81,10 +111,7 @@ fi
 
 if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
   if [[ "${RELOCATION}" == "true" ]]; then
-    if [[ -e "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]]; then
-      echo "~~~ Moving [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}] to [${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}]..."
-      mv "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}" "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
-    fi
+    handle_relocation ""
     path="${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
   else
     path="${paths[0]}"
@@ -97,18 +124,14 @@ if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
   fi
 
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
-  buildkite-agent artifact "${args[@]}" "${path}"
+  bk_agent "${args[@]}" "${path}"
 elif [[ "${COMPRESSED}" == "true" ]]; then
   final_paths=()
   index=0
   for path in "${paths[@]}"; do
-    source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
+    handle_relocation "${index}"
     dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
-    if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
-      if [[ -e ${!source_env_var} ]]; then
-        echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-        mv ${!source_env_var} ${!dest_env_var}
-      fi
+    if [[ -n "${!dest_env_var:-}" ]]; then
       path="${!dest_env_var}"
     fi
 
@@ -120,23 +143,19 @@ elif [[ "${COMPRESSED}" == "true" ]]; then
   "${compress[@]}" "${final_paths[@]}"
 
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
-  buildkite-agent artifact "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+  bk_agent "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
 elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
   index=0
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
 
   for path in "${paths[@]}"; do
-    source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_FROM"
+    handle_relocation "${index}"
     dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
-    if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
-      if [[ -e ${!source_env_var} ]]; then
-        echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-        mv ${!source_env_var} ${!dest_env_var}
-      fi
+    if [[ -n "${!dest_env_var:-}" ]]; then
       path="${!dest_env_var}"
     fi
 
-    buildkite-agent artifact "${args[@]}" "$path"
+    bk_agent "${args[@]}" "$path"
     ((index+=1))
   done
 fi
