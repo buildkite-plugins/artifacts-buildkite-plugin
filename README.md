@@ -165,6 +165,9 @@ steps:
           compressed: logs.tgz
 ```
 
+### `ignore-missing` (optional, boolean)
+
+If set to `true`, it will ignore errors caused when calling `buildkite-agent artifact` to prevent failures if you expect artifacts not to be present in some situations.
 
 ### Relocation
 
