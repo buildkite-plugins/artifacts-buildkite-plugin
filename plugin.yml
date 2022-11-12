@@ -12,6 +12,10 @@ configuration:
           type: string
         to:
           type: string
+        step:
+          type: string
+        build:
+          type: string
       required:
         - from
         - to
