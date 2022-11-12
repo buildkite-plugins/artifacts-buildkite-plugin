@@ -199,6 +199,31 @@ load '/usr/local/lib/bats/load.bash'
   unstub buildkite-agent
 }
 
+@test "Pre-command downloads multiple > 10 artifacts with different steps or builds" {
+  stub_calls=()
+  for i in $(seq 0 10); do
+    export "BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${i}_FROM=/tmp/foo-${i}.log"
+    export "BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${i}_TO=/tmp/foo-r-${i}.log"
+    export "BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${i}_STEP=STEP-UUID-${i}"
+    export "BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${i}_BUILD=UUID-${i}"
+    stub_calls+=( "artifact download --step \* --build \* \* \* : touch /tmp/foo-$i.log; echo downloaded artifact \$7 to \$8 with step \$4 and build \$6" )
+  done
+  stub buildkite-agent "${stub_calls[@]}"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "Downloading artifacts"
+
+  for i in $(seq 0 10); do
+    assert [ -e /tmp/foo-r-"${i}".log ]
+    rm /tmp/foo-r-"${i}".log
+    assert [ ! -e /tmp/foo-"${i}".log ]
+  done
+
+  unstub buildkite-agent
+}
+
 @test "Pre-command does nothing if there is no download-specific vars setup" {
   run "$PWD/hooks/pre-command"
   
