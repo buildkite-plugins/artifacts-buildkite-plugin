@@ -224,6 +224,37 @@ load '/usr/local/lib/bats/load.bash'
   unstub buildkite-agent
 }
 
+
+@test "Pre-command multiple artifacts with default and specific build, step and relocation" {
+  export BUILDKITE_PLUGIN_ARTIFACTS_BUILD="12345"
+  export BUILDKITE_PLUGIN_ARTIFACTS_STEP="6789"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM="/tmp/foo1.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_TO="/tmp/foo2.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_STEP="0001"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1="bar.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2_FROM="/tmp/foo3.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2_BUILD="0007"
+
+  stub buildkite-agent \
+    "artifact download --step \* --build \* \* \* : touch \$7; echo downloaded artifact \$7 with step \$4 and build \$6" \
+    "artifact download --step \* --build \* \* \* : touch \$7; echo downloaded artifact \$7 with step \$4 and build \$6" \
+    "artifact download --step \* --build \* \* \* : touch \$7; echo downloaded artifact \$7 with step \$4 and build \$6"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "Downloading artifacts"
+  assert_output --partial "(extra args: "
+  assert [ -e /tmp/foo2.log ]
+  rm /tmp/foo2.log
+  assert [ ! -e /tmp/foo1.log ]
+  assert_output --partial "/tmp/foo1.log with step 0001 and build 12345"
+  assert_output --partial       "bar.log with step 6789 and build 12345"
+  assert_output --partial "/tmp/foo3.log with step 6789 and build 0007"
+
+  unstub buildkite-agent
+}
+
 @test "Pre-command does nothing if there is no download-specific vars setup" {
   run "$PWD/hooks/pre-command"
   
