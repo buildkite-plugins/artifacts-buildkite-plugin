@@ -14,7 +14,7 @@ steps:
         upload: "log/**/*.log"
 ```
 
-or
+You can specify multiple files/globs to upload as artifacts:
 
 ```yml
 steps:
@@ -24,7 +24,7 @@ steps:
         upload: [ "log/**/*.log", "debug/*.error" ]
 ```
 
-or
+And even rename them before uploading them (can not use globs here though, sorry):
 
 ```yml
 steps:
@@ -32,23 +32,12 @@ steps:
     plugins:
     - artifacts#v1.7.0:
         upload: 
-          from: log1.log
-          to: log2.log
-```
-
-or
-
-```yml
-steps:
-  - command: ...
-    plugins:
-    - artifacts#v1.7.0:
-        upload: 
-        - from: log1.log
-          to: log2.log
+          - from: log1.log
+            to: log2.log
 ```
 
 ### User-defined ACL on uploaded files
+
 When using AWS S3 or Google Cloud Storage as your artifact store, you can optionally define an object-level ACL for your uploaded artifacts. This allows you to have granular control over which artifacts are made public or private.
 
 If not specified it will respect the relevant setting at the agent level.
@@ -85,7 +74,7 @@ steps:
           download: "log/**/*.log"
 ```
 
-or
+You can specify multiple files/patterns:
 
 ```yml
 steps:
@@ -95,7 +84,7 @@ steps:
           download: [ "log/**/*.log", "debug/*.error" ]
 ```
 
-or
+Rename particular files after downloading them:
 
 ```yml
 steps:
@@ -103,20 +92,26 @@ steps:
     plugins:
       - artifacts#v1.7.0:
           download: 
-            from: log1.log
-            to: log2.log
+            - from: log1.log
+              to: log2.log
 ```
 
-or
+And even do so from different builds/steps:
 
 ```yml
 steps:
   - command: ...
     plugins:
       - artifacts#v1.7.0:
+          step: UUID-DEFAULT
+          build: UUID-DEFAULT-2
           download: 
-          - from: log1.log
-            to: log2.log
+            - from: log1.log
+              to: log2.log
+              step: UUID-1
+            - from: log3.log
+              to: log4.log
+              build: UUID-2
 ```
 
 ## Configuration
@@ -125,17 +120,17 @@ steps:
 
 A glob pattern, or array of glob patterns, for files to upload.
 
-### `download` (string, array of strings, {from,to}, array of {from,to})
+### `download` (string, array of strings, {from,to}, array of {from,to[,step][,build]})
 
 A glob pattern, or array of glob patterns, for files to download.
 
 ### `step` (optional, string)
 
-The job UUID or name to download the artifact from.
+The job UUID or name to download the artifacts from unless specified otherwise in the `download` array specification.
 
 ### `build` (optional, string)
 
-The build UUID to download the artifact from.
+The build UUID to download the artifact from unless specificed otherwise in the `download` array specification.
 
 ### `compressed` (optional, string)
 
@@ -168,11 +163,6 @@ steps:
 ### `ignore-missing` (optional, boolean)
 
 If set to `true`, it will ignore errors caused when calling `buildkite-agent artifact` to prevent failures if you expect artifacts not to be present in some situations.
-
-### Relocation
-
-If a file needs to be renamed or moved before upload or after download, a nested object is used with `to` and `from` keys.
-At this time, this can only be used with single files and does not support glob patterns.
 
 ## Developing
 
