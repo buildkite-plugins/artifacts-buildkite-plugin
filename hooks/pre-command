@@ -6,15 +6,8 @@ if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   set -x
 fi
 
-args=("download")
-
-if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_STEP:-}" ]] ; then
-  args+=("--step" "${BUILDKITE_PLUGIN_ARTIFACTS_STEP}")
-fi
-
-if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_BUILD:-}" ]] ; then
-  args+=("--build" "${BUILDKITE_PLUGIN_ARTIFACTS_BUILD}")
-fi
+step_option="${BUILDKITE_PLUGIN_ARTIFACTS_STEP:-}"
+build_option="${BUILDKITE_PLUGIN_ARTIFACTS_BUILD:-}"
 
 paths=()
 compress=()
@@ -47,7 +40,31 @@ if [[ "${#paths[@]}" -le 0 ]]; then
 fi
 
 bk_agent() {
-  if ! buildkite-agent artifact "${@}"; then
+  # first two options must be step and build (but can be empty)
+  step="${1}"
+  shift
+  build="${1}"
+  shift
+
+  options=('download')
+  if [ -n "$step" ]; then
+    options+=("--step" "${step}")
+  fi
+
+  if [ -n "$build" ]; then
+    options+=("--build" "${build}")
+  fi
+
+  if [[ "${#options[@]}" -gt 1 ]]; then
+    EXTRA_MESSAGE="(extra args: '${options[*]:1}')"
+  else
+    EXTRA_MESSAGE=""
+  fi
+
+  options+=("${@}")  # all the rest
+
+  echo "~~~ Downloading artifacts ${EXTRA_MESSAGE}"
+  if ! buildkite-agent artifact "${options[@]}"; then
     if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"}" != "false" ]]; then
       echo "Ignoring error in download of" "${@: -2}"
     else
@@ -94,17 +111,10 @@ if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
   fi
 fi
 
-if [[ "${#args[@]}" -gt 1 ]]; then
-  EXTRA_MESSAGE="(extra args: '${args[*]:1}')"
-else
-  EXTRA_MESSAGE=""
-fi
-
 workdir="${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}"
 
 if [[ "${COMPRESSED}" == "true" ]]; then
-  echo "~~~ Downloading artifacts ${EXTRA_MESSAGE}"
-  bk_agent "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" "${workdir}"
+  bk_agent "${step_option}" "${build_option}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" "${workdir}"
 
   echo "~~~ Uncompressing ${paths[*]} from ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
   "${compress[@]}" "${paths[@]}"
@@ -128,8 +138,7 @@ elif [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
     source="${paths[*]}"
   fi
 
-  echo "~~~ Downloading artifacts ${EXTRA_MESSAGE}"
-  bk_agent "${args[@]}" "${source}" "${workdir}"
+  bk_agent "${step_option}" "${build_option}" "${source}" "${workdir}"
 
   if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
     handle_relocation ""
@@ -137,31 +146,20 @@ elif [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
 elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
   index=0
 
-  echo "~~~ Downloading artifacts ${EXTRA_MESSAGE}"
   for path in "${paths[@]}"; do
     source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_FROM"
     dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_TO"
     step_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_STEP"
     build_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_BUILD"
 
-    per_file_options=()
-
-    if [[ -n "${!step_env_var:-}" ]]; then
-      per_file_options+=("--step" "${!step_env_var}")
-    fi
-
-    if [[ -n "${!build_env_var:-}" ]]; then
-      per_file_options+=("--build" "${!build_env_var}")
-    fi
-
     # finally get the artifact to download
-    if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
-      per_file_options+=("${!source_env_var}")
+    if [ -n "${!source_env_var:-}" ] && [ -n "${!dest_env_var:-}" ]; then
+      source="${!source_env_var}"
     else
-      per_file_options+=("${path}")
+      source="${path}"
     fi
 
-    bk_agent "${args[@]}" "${per_file_options[@]}" "${workdir}"
+    bk_agent "${!step_env_var:-${step_option}}" "${!build_env_var:-${build_option}}" "${source}" "${workdir}"
 
     handle_relocation "${index}"
     ((index+=1))
