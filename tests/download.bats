@@ -234,9 +234,13 @@ load '/usr/local/lib/bats/load.bash'
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1="bar.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2_FROM="/tmp/foo3.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2_BUILD="0007"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_3_FROM="/tmp/foo4.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_3_BUILD="0007"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_3_STEP="0001"
 
   stub buildkite-agent \
     "artifact download --step \* --build \* \* \* : touch \$7; echo downloaded artifact \$7 with step \$4 and build \$6" \
+    "artifact download --step \* --build \* \* \* : echo downloaded artifact \$7 with step \$4 and build \$6" \
     "artifact download --step \* --build \* \* \* : echo downloaded artifact \$7 with step \$4 and build \$6" \
     "artifact download --step \* --build \* \* \* : echo downloaded artifact \$7 with step \$4 and build \$6"
 
@@ -252,6 +256,7 @@ load '/usr/local/lib/bats/load.bash'
   assert_output --partial "/tmp/foo1.log with step 0001 and build 12345"
   assert_output --partial       "bar.log with step 6789 and build 12345"
   assert_output --partial "/tmp/foo3.log with step 6789 and build 0007"
+  assert_output --partial "/tmp/foo4.log with step 0001 and build 0007"
 
   unstub buildkite-agent
 }
