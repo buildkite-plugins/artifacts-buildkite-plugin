@@ -246,7 +246,7 @@ load '/usr/local/lib/bats/load.bash'
     "artifact download \* \* : echo downloaded artifact \$3 to \$4"
 
   stub unzip \
-    "\* \* : echo extracted \$2 from \$1"
+    "\* \* \* \* : echo extracted \$2, \$3 and \$4 from \$1"
 
   run "$PWD/hooks/pre-command"
 
@@ -276,7 +276,7 @@ load '/usr/local/lib/bats/load.bash'
     "artifact download \* \* : echo downloaded artifact \$3 to \$4"
 
   stub tar \
-    "xzf \* \* : echo extracted \$3 from \$2"
+    "xzf \* \* \* \* : echo extracted \$3, \$4 and \$5 from \$2"
 
   run "$PWD/hooks/pre-command"
 
