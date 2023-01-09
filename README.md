@@ -164,6 +164,36 @@ steps:
 
 If set to `true`, it will ignore errors caused when calling `buildkite-agent artifact` to prevent failures if you expect artifacts not to be present in some situations.
 
+### `skip-on-status` (optional, integer or array of integers, uploads only)
+
+You can set this to the exit codes or array of exit codes of the command step (as defined by the `BUILDKITE_COMMAND_EXIT_STATUS` variable) that will cause the plugin to avoid trying to upload artifacts.
+
+This should allow you to specify known failure conditions that you want to avoid uploading artifacts. For example, because you know logs will be huge or not useful.
+
+Skip uploading if the main command failed with exit code 147:
+
+```yml
+steps:
+  - command: ...
+    plugins:
+    - artifacts#v1.8.0:
+        upload: "log/*.log"
+        skip-on-status: 147
+```
+
+Alternatively, skip artifact uploading on exit codes 1 and 5:
+
+```yml
+steps:
+  - command: ...
+    plugins:
+    - artifacts#v1.8.0:
+        upload: "log/*.log"
+        skip-on-status:
+          - 1
+          - 5
+```
+
 ## Developing
 
 To run testing, shellchecks and plugin linting use use `bk run` with the [Buildkite CLI](https://github.com/buildkite/cli).

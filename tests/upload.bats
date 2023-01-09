@@ -223,3 +223,63 @@ load '/usr/local/lib/bats/load.bash'
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_TO
 }
+
+@test "Single skip exit status does not match still uploads" {
+  export BUILDKITE_COMMAND_EXIT_STATUS="100"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_SKIP_ON_STATUS="10"
+
+  stub buildkite-agent \
+    "artifact upload \* : echo uploaded \$3"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+
+  unstub buildkite-agent
+}
+
+@test "Single skip exit status matches, skips upload" {
+  export BUILDKITE_COMMAND_EXIT_STATUS="10"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_SKIP_ON_STATUS="10"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  refute_output --partial "Uploading artifacts"
+  assert_output --partial "skipping upload"
+}
+
+@test "Multiple skip exit status does not match still uploads" {
+  export BUILDKITE_COMMAND_EXIT_STATUS="100"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_SKIP_ON_STATUS_0="10"
+  export BUILDKITE_PLUGIN_ARTIFACTS_SKIP_ON_STATUS_1="1"
+
+  stub buildkite-agent \
+    "artifact upload \* : echo uploaded \$3"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+
+  unstub buildkite-agent
+}
+
+@test "Multiple skip exit status matches, skips upload" {
+  export BUILDKITE_COMMAND_EXIT_STATUS="10"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_SKIP_ON_STATUS_0="1"
+  export BUILDKITE_PLUGIN_ARTIFACTS_SKIP_ON_STATUS_1="100"
+  export BUILDKITE_PLUGIN_ARTIFACTS_SKIP_ON_STATUS_2="10"
+  export BUILDKITE_PLUGIN_ARTIFACTS_SKIP_ON_STATUS_3="2"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  refute_output --partial "Uploading artifacts"
+  assert_output --partial "skipping upload"
+}
