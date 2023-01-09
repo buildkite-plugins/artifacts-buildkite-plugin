@@ -6,6 +6,15 @@ if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   set -x
 fi
 
+while IFS='=' read -r EXIT_VAR _ ; do
+  if [[ $EXIT_VAR =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_SKIP_ON_STATUS(|_[0-9]+))$ ]]; then
+    if [ "${BUILDKITE_COMMAND_EXIT_STATUS}" -eq "${!EXIT_VAR}" ]; then
+      echo "Command exit status matches ${!EXIT_VAR}, skipping upload"
+      exit 0
+    fi
+  fi
+done < <(env | sort)
+
 args=("upload")
 
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_JOB:-}" ]] ; then
