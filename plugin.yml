@@ -53,9 +53,17 @@ configuration:
       pattern: '.*(.zip|.tgz)$'
     ignore-missing:
       type: boolean
+    skip-on-status:
+      oneOf:
+        - type: integer
+        - type: array
+          items:
+            type: integer
   oneOf:
     - required:
       - upload
     - required:
       - download
+  dependencies:
+    skip-on-status: [ upload ]
   additionalProperties: false
