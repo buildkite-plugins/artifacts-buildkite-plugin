@@ -27,7 +27,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
     "artifact upload \* : echo uploaded \$3"
 
   stub zip \
-    "\* \* : echo zipped \$2 into \$1"
+    "-r \* \* : echo zipped \$3 into \$2"
 
   run "$PWD/hooks/post-command"
 
@@ -76,7 +76,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
     "artifact upload \* : echo uploaded \$3"
 
   stub zip \
-    "\* \* : echo zipped \$2 into \$1"
+    "-r \* \* : echo zipped \$3 into \$2"
 
   touch /tmp/foo.log
 
@@ -146,7 +146,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
     "artifact upload --job \* \* : echo uploaded \$5 with --job \$4"
 
   stub zip \
-    "\* \* : echo zipped \$2 into \$1"
+    "-r \* \* : echo zipped \$3 into \$2"
 
   run "$PWD/hooks/post-command"
 
@@ -201,7 +201,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
     "artifact upload \* : echo uploaded \$3"
 
   stub zip \
-    "\* \* \* \* : echo zipped \$2, \$3 and \$4 into \$1"
+    "-r \* \* \* \* : echo zipped \$3, \$4 and \$5 into \$2"
 
   run "$PWD/hooks/post-command"
 
@@ -266,7 +266,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
     "artifact upload \* : echo uploaded \$3"
 
   stub zip \
-    "\* \* \* \* : echo zipped \$2, \$3 and \$4 into \$1"
+    "-r \* \* \* \* : echo zipped \$3, \$4 and \$5 into \$2"
 
   run "$PWD/hooks/post-command"
 
