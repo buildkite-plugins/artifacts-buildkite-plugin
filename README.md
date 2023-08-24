@@ -134,29 +134,30 @@ The build UUID to download the artifact from unless specificed otherwise in the 
 
 ### `compressed` (optional, string)
 
-Limitations:
+⚠️ Limitations:
 * filename needs to end with `.zip` or `.tgz` and that will determine the compression executable to use
-* path globs (`*`) are interpreted by agent's shell and (un)compressing program (meaning that probably `**` will not work)
+* path globs (`*`) are interpreted by agent's shell and (un)compressing program, meaning that `*` and `**` will not work.
 
-When uploading, globs specified in the `upload` option will be compressed in a single file with this name and uploaded as a single artifact. The following example will get all files matching `log/*.log`, zip them up and upload a single artifact file named `logs.zip`:
+When uploading, the file or directory specified in the `upload` option will be compressed in a single file with this name and uploaded as a single artifact. The following example will get the directory matching `log/my-folder`, zip them up and upload a single artifact file named `logs.zip`:
+
 
 ```yml
 steps:
   - command: ...
     plugins:
     - artifacts#v1.9.0:
-        upload: "log/*.log"
+        upload: "log/my-folder"
         compressed: logs.zip
 ```
 
-When downloading, this option states the actual name of the artifact to be downloaded and globs in the `download` option will be extracted off of it. The following example will download the `logs.tgz` artifact and extract all files in it matching `log/*.log`:
+When downloading, this option states the actual name of the artifact to be downloaded in the `download` option will be extracted off of it. The following example will download the `logs.tgz` artifact and extract all files in it matching `log/file.log`:
 
 ```yml
 steps:
   - command: ...
     plugins:
       - artifacts#v1.9.0:
-          download: "log/*.log"
+          download: "log/file.log"
           compressed: logs.tgz
 ```
 

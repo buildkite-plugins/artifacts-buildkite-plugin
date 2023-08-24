@@ -55,7 +55,7 @@ if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
   COMPRESSED="true"
 
   if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.zip ]]; then
-    compress+=("zip" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
+    compress+=("zip" "-r" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
   elif [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.tgz ]]; then
     compress+=("tar" "czf" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
   else
