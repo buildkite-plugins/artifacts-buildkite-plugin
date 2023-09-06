@@ -137,7 +137,7 @@ if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
     fi
   fi
 
-  if [[ ! -z "${path}" ]]; then
+  if [[ -n "${path}" ]]; then
     echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
     bk_agent "${args[@]}" "${path}"
   fi
