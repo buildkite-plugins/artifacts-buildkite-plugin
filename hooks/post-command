@@ -54,11 +54,6 @@ fi
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
   COMPRESSED="true"
 
-  if [[ ! -e "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" ]]; then
-    echo "+++ 🚨 The specified compression path '${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}' does not exist"
-    exit 1
-  fi
-
   if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.zip ]]; then
     compress+=("zip" "-r" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
   elif [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.tgz ]]; then
@@ -133,6 +128,10 @@ if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
 
   if [[ "${COMPRESSED}" == "true" ]]; then
     echo "~~~ Compressing ${path} to ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+    if [[ ! -e "${path}" ]]; then
+      echo "+++ 🚨 The specified compression path does not exist"
+      exit 1
+    fi
     "${compress[@]}" "${path}"
     path=" ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
   fi
