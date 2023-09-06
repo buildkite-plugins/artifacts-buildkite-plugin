@@ -129,15 +129,18 @@ if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
   if [[ "${COMPRESSED}" == "true" ]]; then
     echo "~~~ Compressing ${path} to ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
     if [[ ! -e "${path}" ]]; then
-      echo "+++ 🚨 The specified compression path does not exist"
-      exit 1
+      echo "+++ 🚨 Unable to compress artifact, '${path}' may not exist or is an empty directory"
+      path=""
+    else
+      "${compress[@]}" "${path}"
+      path=" ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
     fi
-    "${compress[@]}" "${path}"
-    path=" ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
   fi
 
-  echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
-  bk_agent "${args[@]}" "${path}"
+  if [[ ! -z "${path}" ]]; then
+    echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
+    bk_agent "${args[@]}" "${path}"
+  fi
 elif [[ "${COMPRESSED}" == "true" ]]; then
   final_paths=()
   index=0
