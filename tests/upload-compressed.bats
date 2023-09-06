@@ -5,16 +5,15 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 # Uncomment to enable stub debug output:
 # export BUILDKITE_AGENT_STUB_DEBUG=/dev/tty
 
-@test "Compression without path existence" {
+@test "Compression fails silently when there is nothing to compress" {
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="non_existent_file.txt"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
 
   run "$PWD/hooks/post-command"
 
-  assert_failure
-  assert_output --partial "The specified compression path does not exist"
+  assert_success
+  assert_output --partial "Unable to compress artifact, 'non_existent_file.txt' may not exist or is an empty directory"
   refute_output --partial "Uploading artifacts"
-  refute [ -e "non_existent_file.txt" ]
 
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
