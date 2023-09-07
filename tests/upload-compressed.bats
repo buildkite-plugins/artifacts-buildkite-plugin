@@ -5,15 +5,29 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 # Uncomment to enable stub debug output:
 # export BUILDKITE_AGENT_STUB_DEBUG=/dev/tty
 
-@test "Compression fails silently when there is nothing to compress" {
+@test "Compression errors silently when there is nothing to compress" {
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="non_existent_file.txt"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
 
   run "$PWD/hooks/post-command"
 
+  assert_failure
+  assert_output --partial "Unable to compress artifact, 'non_existent_file.txt' may not exist or is an empty directory"
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+}
+
+@test "Compression errors silently when there is nothing to compress and ignore-missing is set to true" {
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="non_existent_file.txt"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
+  export BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING="true"
+
+  run "$PWD/hooks/post-command"
+
   assert_success
   assert_output --partial "Unable to compress artifact, 'non_existent_file.txt' may not exist or is an empty directory"
-  refute_output --partial "Uploading artifacts"
+  assert_output --partial "Ignoring error in upload of"
 
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
