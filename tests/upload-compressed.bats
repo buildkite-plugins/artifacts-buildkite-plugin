@@ -18,7 +18,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
 }
 
-@test "Compression errors silently when there is nothing to compress and ignore-missing is set to true" {
+@test "Compression ignored when there is nothing to compress and ignore-missing is set to true" {
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="non_existent_file.txt"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
   export BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING="true"
