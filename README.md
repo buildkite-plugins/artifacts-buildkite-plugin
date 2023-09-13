@@ -163,7 +163,7 @@ steps:
 
 ### `ignore-missing` (optional, boolean)
 
-If set to `true`, it will ignore errors caused when calling `buildkite-agent artifact` to prevent failures if you expect artifacts not to be present in some situations.
+If set to `true`, it will ignore errors caused when calling `buildkite-agent artifact` to prevent failures if you expect artifacts not to be present in some situations. When using the `compressed` property, it will ignore compressing the artifacts that are not present.
 
 ### `skip-on-status` (optional, integer or array of integers, uploads only)
 
