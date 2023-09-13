@@ -5,7 +5,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 # Uncomment to enable stub debug output:
 # export BUILDKITE_AGENT_STUB_DEBUG=/dev/tty
 
-@test "Compression errors silently when there is nothing to compress" {
+@test "Compression fails when there is nothing to compress" {
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="non_existent_file.txt"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
 
