@@ -5,6 +5,34 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 # Uncomment to enable stub debug output:
 # export BUILDKITE_AGENT_STUB_DEBUG=/dev/tty
 
+@test "Compression fails when there is nothing to compress" {
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="non_existent_file.txt"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
+
+  run "$PWD/hooks/post-command"
+
+  assert_failure
+  assert_output --partial "Unable to compress artifact, 'non_existent_file.txt' may not exist or is an empty directory"
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+}
+
+@test "Compression ignored when there is nothing to compress and ignore-missing is set to true" {
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="non_existent_file.txt"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
+  export BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING="true"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Unable to compress artifact, 'non_existent_file.txt' may not exist or is an empty directory"
+  assert_output --partial "Ignoring error in upload of"
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+}
+
 @test "Invalid compressed format" {
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="file.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.rar"
@@ -20,8 +48,10 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 }
 
 @test "Single value zip" {
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="file.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
+
+  touch "file.log"
 
   stub buildkite-agent \
     "artifact upload \* : echo uploaded \$3"
@@ -32,7 +62,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   run "$PWD/hooks/post-command"
 
   assert_success
-  assert_output --partial "Compressing *.log to file.zip"
+  assert_output --partial "Compressing file.log to file.zip"
   assert_output --partial "Uploading artifacts"
   assert_output --partial "uploaded file.zip"
 
@@ -41,11 +71,15 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+
+  rm "file.log"
 }
 
 @test "Single value tgz" {
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="file.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.tgz"
+
+  touch "file.log"
 
   stub buildkite-agent \
     "artifact upload \* : echo uploaded \$3"
@@ -56,7 +90,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   run "$PWD/hooks/post-command"
 
   assert_success
-  assert_output --partial "Compressing *.log to file.tgz"
+  assert_output --partial "Compressing file.log to file.tgz"
   assert_output --partial "Uploading artifacts"
   assert_output --partial "uploaded file.tgz"
 
@@ -65,6 +99,8 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+
+  rm "file.log"
 }
 
 @test "Single file zip with relocation" {
@@ -138,9 +174,11 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 }
 
 @test "Single value zip with job" {
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="file.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_JOB="12345"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
+
+  touch "file.log"
 
   stub buildkite-agent \
     "artifact upload --job \* \* : echo uploaded \$5 with --job \$4"
@@ -152,9 +190,9 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
   assert_success
   assert_output --partial "Uploading artifacts (extra args: '--job 12345')"
-  assert_output --partial "Compressing *.log to file.zip"
+  assert_output --partial "Compressing file.log to file.zip"
   assert_output --partial "uploaded file.zip"
-  refute_output --partial "uploaded *.log"
+  refute_output --partial "uploaded file.log"
   
   unstub buildkite-agent
   unstub zip
@@ -162,12 +200,16 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
   unset BUILDKITE_PLUGIN_ARTIFACTS_JOB
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+
+  rm "file.log"
 }
 
 @test "Single value tgz with job" {
-  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="*.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="file.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_JOB="12345"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.tgz"
+
+  touch "file.log"
 
   stub buildkite-agent \
     "artifact upload --job \* \* : echo uploaded \$5 with --job \$4"
@@ -179,9 +221,9 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
   assert_success
   assert_output --partial "Uploading artifacts (extra args: '--job 12345')"
-  assert_output --partial "Compressing *.log to file.tgz"
+  assert_output --partial "Compressing file.log to file.tgz"
   assert_output --partial "uploaded file.tgz"
-  refute_output --partial "uploaded *.log"
+  refute_output --partial "uploaded file.log"
   
   unstub buildkite-agent
   unstub tar
@@ -189,6 +231,8 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD
   unset BUILDKITE_PLUGIN_ARTIFACTS_JOB
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+
+  rm "file.log"
 }
 
 @test "Multiple artifacts zip" {
@@ -196,6 +240,10 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1="bar.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2="baz.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
+
+  touch /tmp/foo.log
+  touch bar.log
+  touch baz.log
 
   stub buildkite-agent \
     "artifact upload \* : echo uploaded \$3"
@@ -220,6 +268,10 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+
+  rm /tmp/foo.log
+  rm bar.log
+  rm baz.log
 }
 
 @test "Multiple artifacts tgz" {
@@ -227,6 +279,10 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1="bar.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2="baz.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.tgz"
+
+  touch /tmp/foo.log
+  touch bar.log
+  touch baz.log
 
   stub buildkite-agent \
     "artifact upload \* : echo uploaded \$3"
@@ -251,6 +307,10 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+
+  rm /tmp/foo.log
+  rm bar.log
+  rm baz.log
 }
 
 @test "Multiple artifacs zip some relocation" {
@@ -261,6 +321,8 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
 
   touch /tmp/foo.log
+  touch bar.log
+  touch baz.log
 
   stub buildkite-agent \
     "artifact upload \* : echo uploaded \$3"
@@ -282,6 +344,8 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   assert [ -e /tmp/foo2.log ]
   assert [ ! -e /tmp/foo.log ]
   rm /tmp/foo2.log
+  rm bar.log
+  rm baz.log
 
   unstub buildkite-agent
   unstub zip
