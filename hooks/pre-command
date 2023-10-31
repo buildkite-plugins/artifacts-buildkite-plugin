@@ -19,14 +19,21 @@ RELOCATION="false"
 while IFS='=' read -r path _ ; do
   if [[ $path == BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD ]]; then
     paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD")
+  elif [[ $path == BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_PATH ]]; then
+    paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_PATH")
   elif [[ $path == BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
     RELOCATION="true"
     paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM")
-  elif [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+)$ ]] || [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+_FROM)$ ]]; then
+  elif [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+)$ ]] || [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+_PATH)$ ]] || [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+_FROM)$ ]]; then
     DOWNLOAD="multiple"
     paths+=("${!path}")
   fi
 done < <(env | sort)
+
+if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_PATH:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM:-}" ]]; then
+  echo "+++ 🚨 Both 'path' and 'from' keys found, only one may be provided"
+  exit 1
+fi
 
 if ((${#paths[@]} <= 0)); then
   # no download data
@@ -141,10 +148,22 @@ elif [[ "${DOWNLOAD}" == "multiple" ]]; then
   index=0
 
   for path in "${paths[@]}"; do
+    path_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_PATH"
     source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_FROM"
     dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_TO"
     step_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_STEP"
     build_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_BUILD"
+
+    # path must not be used with to/from keys
+    if [[ -n "${!path_env_var:-}" ]]; then
+      if [[ -n "${!source_env_var:-}" ]]; then
+        echo "+++ 🚨 Both 'path' and 'from' keys found at index $index, only one may be provided"
+        exit 1
+      elif [[ -n "${!dest_env_var:-}" ]]; then
+        echo "+++ 🚨 Both 'path' and 'to' keys found at index $index, 'to' must be paired with 'from' key not 'path'"
+        exit 1
+      fi
+    fi
 
     # finally get the artifact to download
     if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then

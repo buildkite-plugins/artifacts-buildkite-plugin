@@ -283,3 +283,38 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   refute_output --partial "Uploading artifacts"
   assert_output --partial "skipping upload"
 }
+
+@test "Post-command uploads artifacts with a single value for upload with path" {
+  stub buildkite-agent \
+    "artifact upload \* : echo uploaded \$3"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_PATH="*.log"
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+  refute_output --partial "extra args"
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_PATH
+}
+
+@test "Post-command uploads multiple artifacts with path" {
+  stub buildkite-agent \
+    "artifact upload \* : echo uploaded \$3" \
+    "artifact upload \* : echo uploaded \$3" \
+    "artifact upload \* : echo uploaded \$3"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_PATH="/tmp/foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1_PATH="bar.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2_PATH="baz.log"
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_PATH
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1_PATH
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_2_PATH
+}

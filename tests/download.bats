@@ -288,3 +288,37 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO
 }
+
+@test "Pre-command downloads artifacts with path" {
+  stub buildkite-agent \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_PATH="*.log"
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "Downloading artifacts"
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_PATH
+}
+
+@test "Pre-command downloads multiple artifacts with path" {
+  stub buildkite-agent \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4" \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4" \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_PATH="foo.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1_PATH="bar.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2_PATH="baz.log"
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "Downloading artifacts"
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_PATH
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1_PATH
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_2_PATH
+}

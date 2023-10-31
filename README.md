@@ -106,11 +106,9 @@ steps:
           step: UUID-DEFAULT
           build: UUID-DEFAULT-2
           download: 
-            - from: log1.log
-              to: log2.log
+            - path: log1.log
               step: UUID-1
-            - from: log3.log
-              to: log4.log
+            - path: log3.log
               build: UUID-2
 ```
 
