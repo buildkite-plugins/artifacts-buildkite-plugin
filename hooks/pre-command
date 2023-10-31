@@ -28,7 +28,7 @@ while IFS='=' read -r path _ ; do
   fi
 done < <(env | sort)
 
-if [[ "${#paths[@]}" -le 0 ]]; then
+if ((${#paths[@]} <= 0)); then
   # no download data
   exit 0
 fi
@@ -41,15 +41,15 @@ bk_agent() {
   shift
 
   options=('download')
-  if [ -n "$step" ]; then
+  if [[ -n "$step" ]]; then
     options+=("--step" "${step}")
   fi
 
-  if [ -n "$build" ]; then
+  if [[ -n "$build" ]]; then
     options+=("--build" "${build}")
   fi
 
-  if [[ "${#options[@]}" -gt 1 ]]; then
+  if ((${#options[@]} > 1)); then
     EXTRA_MESSAGE="(extra args: '${options[*]:1}')"
   else
     EXTRA_MESSAGE=""
@@ -147,7 +147,7 @@ elif [[ "${DOWNLOAD}" == "multiple" ]]; then
     build_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_BUILD"
 
     # finally get the artifact to download
-    if [ -n "${!source_env_var:-}" ] && [ -n "${!dest_env_var:-}" ]; then
+    if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
       source="${!source_env_var}"
     else
       source="${path}"
