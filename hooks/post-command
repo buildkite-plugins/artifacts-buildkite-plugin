@@ -26,22 +26,16 @@ compress=()
 
 COMPRESSED="false"
 RELOCATION="false"
-SINGULAR_UPLOAD_OBJECT="false"
-MULTIPLE_UPLOADS="false"
-
-if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] || { [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO:-}" ]]; }; then
-  SINGULAR_UPLOAD_OBJECT="true"
-  if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] ; then
-    paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD}")
-  elif [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO:-}" ]] ; then
-    RELOCATION="true"
-    paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}")
-  fi
-fi
+UPLOAD="single"
 
 while IFS='=' read -r path _ ; do
-  if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+) ]] && ! [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+_TO) ]]; then
-    MULTIPLE_UPLOADS="true"
+  if [[ $path == BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD ]]; then
+    paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD}")
+  elif [[ $path == BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO:-}" ]]; then
+    RELOCATION="true"
+    paths+=("${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM}")
+  elif [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+) ]] && ! [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+_TO) ]]; then
+    UPLOAD="multiple"
     paths+=("${!path}")
   fi
 done < <(env | sort)
@@ -118,7 +112,7 @@ else
   EXTRA_MESSAGE=""
 fi
 
-if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
+if [[ "${UPLOAD}" == "single" ]]; then
   if [[ "${RELOCATION}" == "true" ]]; then
     handle_relocation ""
     path="${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
@@ -157,7 +151,7 @@ elif [[ "${COMPRESSED}" == "true" ]]; then
 
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
   bk_agent "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
-elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
+elif [[ "${UPLOAD}" == "multiple" ]]; then
   index=0
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
 
