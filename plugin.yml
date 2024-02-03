@@ -18,7 +18,6 @@ configuration:
           type: string
       required:
         - from
-        - to
   properties:
     upload:
       oneOf:
