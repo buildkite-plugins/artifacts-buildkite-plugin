@@ -10,7 +10,7 @@ This functionality duplicates the [artifact_paths](https://buildkite.com/docs/pi
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.9.2:
+    - artifacts#v1.9.3:
         upload: "log/**/*.log"
 ```
 
@@ -20,7 +20,7 @@ You can specify multiple files/globs to upload as artifacts:
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.9.2:
+    - artifacts#v1.9.3:
         upload: [ "log/**/*.log", "debug/*.error" ]
 ```
 
@@ -30,7 +30,7 @@ And even rename them before uploading them (can not use globs here though, sorry
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.9.2:
+    - artifacts#v1.9.3:
         upload: 
           - from: log1.log
             to: log2.log
@@ -47,7 +47,7 @@ eg: uploading a public file when using S3
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.9.2:
+    - artifacts#v1.9.3:
         upload: "coverage-report/**/*"
         s3-upload-acl: public-read
 ```
@@ -57,7 +57,7 @@ eg: uploading a private file when using GS
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.9.2:
+    - artifacts#v1.9.3:
         upload: "coverage-report/**/*"
         gs-upload-acl: private
 ```
@@ -70,7 +70,7 @@ This downloads artifacts matching globs to the local filesystem. See [downloadin
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.9.2:
+      - artifacts#v1.9.3:
           download: "log/**/*.log"
 ```
 
@@ -80,7 +80,7 @@ You can specify multiple files/patterns:
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.9.2:
+      - artifacts#v1.9.3:
           download: [ "log/**/*.log", "debug/*.error" ]
 ```
 
@@ -90,7 +90,7 @@ Rename particular files after downloading them:
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.9.2:
+      - artifacts#v1.9.3:
           download: 
             - from: log1.log
               to: log2.log
@@ -145,7 +145,7 @@ When uploading, the file or directory specified in the `upload` option will be c
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.9.2:
+    - artifacts#v1.9.3:
         upload: "log/my-folder"
         compressed: logs.zip
 ```
@@ -156,7 +156,7 @@ When downloading, this option states the actual name of the artifact to be downl
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.9.2:
+      - artifacts#v1.9.3:
           download: "log/file.log"
           compressed: logs.tgz
 ```
@@ -177,7 +177,7 @@ Skip uploading if the main command failed with exit code 147:
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.9.2:
+    - artifacts#v1.9.3:
         upload: "log/*.log"
         skip-on-status: 147
 ```
@@ -188,7 +188,7 @@ Alternatively, skip artifact uploading on exit codes 1 and 5:
 steps:
   - command: ...
     plugins:
-    - artifacts#v1.9.2:
+    - artifacts#v1.9.3:
         upload: "log/*.log"
         skip-on-status:
           - 1
