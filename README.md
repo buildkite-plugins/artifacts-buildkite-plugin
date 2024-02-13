@@ -102,7 +102,7 @@ And even do so from different builds/steps:
 steps:
   - command: ...
     plugins:
-      - artifacts#v1.9.2:
+      - artifacts#v1.9.3:
           step: UUID-DEFAULT
           build: UUID-DEFAULT-2
           download: 
