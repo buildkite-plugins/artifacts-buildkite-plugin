@@ -36,14 +36,14 @@ setup() {
   run "$PWD/hooks/post-command"
 
   assert_success
-  assert_output --partial "Moving [/tmp/foo.log]"
+  assert_output --partial "Copying [/tmp/foo.log]"
   assert_output --partial "Uploading artifacts"
   assert_output --partial "Ignoring error in upload of /tmp/foo2.log"
   refute_output --partial "uploaded /tmp/foo2.log"
   refute_output --partial "uploaded /tmp/foo.log"
-  assert [ -e /tmp/foo2.log ]
-  assert [ ! -e /tmp/foo.log ]
-  rm -f /tmp/foo2.log
+  assert [ -e /tmp/foo2.log ] # 'to' exists
+  assert [ -e /tmp/foo.log ] # 'from' still exists
+  rm -f /tmp/foo.log /tmp/foo2.log
 
   unstub buildkite-agent
 }
@@ -61,7 +61,7 @@ setup() {
   assert_output --partial "Uploading artifacts"
   assert_output --partial "Ignoring missing file /tmp/foo.log"
   assert_output --partial "Ignoring error in upload of /tmp/foo2.log"
-  refute_output --partial "Moving [/tmp/foo.log]"
+  refute_output --partial "Copying [/tmp/foo.log]"
   refute_output --partial "uploaded /tmp/foo2.log"
   refute_output --partial "uploaded /tmp/foo.log"
   assert [ ! -e /tmp/foo2.log ]
@@ -110,10 +110,10 @@ setup() {
   refute_output --partial "uploaded /tmp/foo.log"
   assert_output --partial "Ignoring error in upload of bar.log"
   refute_output --partial "uploaded bar.log"
-  assert [ -e /tmp/foo2.log ]
-  assert [ ! -e /tmp/foo.log ]
+  assert [ -e /tmp/foo2.log ] # 'to' exists
+  assert [ -e /tmp/foo.log ] # 'from' still exists
 
-  rm /tmp/foo2.log
+  rm /tmp/foo.log /tmp/foo2.log
 
   unstub buildkite-agent
 }
@@ -135,15 +135,15 @@ setup() {
 
   assert_success
   assert_output --partial "Uploading artifacts"
-  assert_output --partial "Moving [/tmp/foo.log]"
+  assert_output --partial "Copying [/tmp/foo.log]"
   refute_output --partial "uploaded /tmp/foo.log"
   refute_output --partial "uploaded /tmp/foo2.log"
   assert_output --partial "Ignoring error in upload of /tmp/foo2.log"
-  
-  assert [ -e /tmp/foo2.log ]
-  assert [ ! -e /tmp/foo.log ]
-  
-  rm /tmp/foo2.log
+
+  assert [ -e /tmp/foo2.log ] # 'to' exists
+  assert [ -e /tmp/foo.log ] # 'from' still exists
+
+  rm /tmp/foo.log /tmp/foo2.log
 
   unstub buildkite-agent
 }
@@ -164,7 +164,7 @@ setup() {
 
   assert_success
   assert_output --partial "Uploading artifacts"
-  refute_output --partial "Moving [/tmp/foo.log]"
+  refute_output --partial "Copying [/tmp/foo.log]"
   refute_output --partial "uploaded /tmp/foo.log"
   refute_output --partial "uploaded /tmp/foo2.log"
   assert_output --partial "Ignoring missing file /tmp/foo.log"
@@ -172,7 +172,7 @@ setup() {
 
   assert [ ! -e /tmp/foo2.log ]
   assert [ ! -e /tmp/foo.log ]
-  
+
   unstub buildkite-agent
 }
 
@@ -196,10 +196,10 @@ setup() {
 
   assert_success
   assert_output --partial "Uploading artifacts"
-  
+
   for i in $(seq 0 10); do
-    assert [ -e /tmp/foo-r-"${i}".log ]
-    assert [ ! -e /tmp/foo-"${i}".log ]
+    assert [ -e /tmp/foo-r-"${i}".log ] # 'to' exists
+    assert [ -e /tmp/foo-"${i}".log ] # 'from' still exists
     rm /tmp/foo-r-"${i}".log
 
     if [ $((i%2)) -eq 0 ]; then

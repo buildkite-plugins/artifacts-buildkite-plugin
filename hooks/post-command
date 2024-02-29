@@ -92,10 +92,10 @@ handle_relocation() {
 
   if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
     if [[ -e ${!source_env_var} ]]; then
-      echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-      mv "${!source_env_var}" "${!dest_env_var}"
+      echo "~~~ Copying [${!source_env_var}] to [${!dest_env_var}]..."
+      cp -a "${!source_env_var}" "${!dest_env_var}"
     elif [[ ${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"} == "true" ]]; then
-      echo "Ignoring missing file ${!source_env_var} for relocation"
+      echo "Ignoring missing file ${!source_env_var} for copy"
     fi
   fi
 }
