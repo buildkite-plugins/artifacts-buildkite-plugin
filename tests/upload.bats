@@ -30,7 +30,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   run "$PWD/hooks/post-command"
 
   assert_success
-  assert_output --partial "Moving [/tmp/foo.log]"
+  assert_output --partial "Copying [/tmp/foo.log]"
   assert_output --partial "Uploading artifacts"
   assert_output --partial "uploaded /tmp/foo2.log"
   refute_output --partial "uploaded /tmp/foo.log"
@@ -109,8 +109,8 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   run "$PWD/hooks/post-command"
 
   assert_success
-  assert [ -e /tmp/foo2.log ]
-  assert [ ! -e /tmp/foo.log ]
+  assert [ -e /tmp/foo2.log ] # 'to' exists
+  assert [ -e /tmp/foo.log ] # 'from' still exists
   assert_output --partial "Uploading artifacts"
   refute_output --partial "uploaded /tmp/foo.log"
 
@@ -136,8 +136,8 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   assert_success
   assert_output --partial "Uploading artifacts"
   for i in $(seq 0 10); do
-    assert [ -e /tmp/foo-r-"${i}".log ]
-    assert [ ! -e /tmp/foo-"${i}".log ]
+    assert [ -e /tmp/foo-r-"${i}".log ] # 'to' exists
+    assert [ -e /tmp/foo-"${i}".log ] # 'from' still exists
     refute_output --partial "uploaded /tmp/foo-${i}.log"
     unset "BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${i}_FROM"
     unset "BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${i}_TO"

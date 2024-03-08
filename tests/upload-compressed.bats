@@ -119,16 +119,16 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   run "$PWD/hooks/post-command"
 
   assert_success
-  assert_output --partial "Moving [/tmp/foo.log]"
+  assert_output --partial "Copying [/tmp/foo.log]"
   assert_output --partial "Compressing /tmp/foo2.log to file.zip"
   assert_output --partial "Uploading artifacts"
   assert_output --partial "uploaded file.zip"
   refute_output --partial "uploaded /tmp/foo.log"
   refute_output --partial "uploaded /tmp/foo2.log"
 
-  assert [ -e /tmp/foo2.log ]
-  assert [ ! -e /tmp/foo.log ]
-  rm /tmp/foo2.log
+  assert [ -e /tmp/foo2.log ] # 'to' exists
+  assert [ -e /tmp/foo.log ] # 'from' still exists
+  rm /tmp/foo.log /tmp/foo2.log
 
   unstub buildkite-agent
   unstub zip
@@ -154,16 +154,16 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   run "$PWD/hooks/post-command"
 
   assert_success
-  assert_output --partial "Moving [/tmp/foo.log]"
+  assert_output --partial "Copying [/tmp/foo.log]"
   assert_output --partial "Compressing /tmp/foo2.log to file.tgz"
   assert_output --partial "Uploading artifacts"
   assert_output --partial "uploaded file.tgz"
   refute_output --partial "uploaded /tmp/foo.log"
   refute_output --partial "uploaded /tmp/foo2.log"
 
-  assert [ -e /tmp/foo2.log ]
-  assert [ ! -e /tmp/foo.log ]
-  rm /tmp/foo2.log
+  assert [ -e /tmp/foo2.log ] # 'to' exists
+  assert [ -e /tmp/foo.log ] # 'from' still exists
+  rm /tmp/foo.log /tmp/foo2.log
 
   unstub buildkite-agent
   unstub tar
@@ -334,16 +334,16 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
   assert_success
   assert_output --partial "Uploading artifacts"
-  assert_output --partial "Moving [/tmp/foo.log]"
+  assert_output --partial "Copying [/tmp/foo.log]"
   assert_output --partial "Compressing /tmp/foo2.log bar.log baz.log to file.zip"
   refute_output --partial "uploaded /tmp/foo.log"
   refute_output --partial "uploaded /tmp/foo2.log"
   refute_output --partial "uploaded bar.log"
   refute_output --partial "uploaded baz.log"
 
-  assert [ -e /tmp/foo2.log ]
-  assert [ ! -e /tmp/foo.log ]
-  rm /tmp/foo2.log
+  assert [ -e /tmp/foo2.log ] # 'to' exists
+  assert [ -e /tmp/foo.log ] # 'from' still exists
+  rm /tmp/foo.log /tmp/foo2.log
   rm bar.log
   rm baz.log
 
@@ -376,16 +376,16 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
   assert_success
   assert_output --partial "Uploading artifacts"
-  assert_output --partial "Moving [/tmp/foo.log]"
+  assert_output --partial "Copying [/tmp/foo.log]"
   assert_output --partial "Compressing /tmp/foo2.log bar.log baz.log to file.tgz"
   refute_output --partial "uploaded /tmp/foo.log"
   refute_output --partial "uploaded /tmp/foo2.log"
   refute_output --partial "uploaded bar.log"
   refute_output --partial "uploaded baz.log"
 
-  assert [ -e /tmp/foo2.log ]
-  assert [ ! -e /tmp/foo.log ]
-  rm /tmp/foo2.log
+  assert [ -e /tmp/foo2.log ] # 'to' exists
+  assert [ -e /tmp/foo.log ] # 'from' still exists
+  rm /tmp/foo.log /tmp/foo2.log
 
   unstub buildkite-agent
   unstub tar
