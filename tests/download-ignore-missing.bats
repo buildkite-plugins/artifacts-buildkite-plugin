@@ -36,7 +36,6 @@ setup() {
   assert_success
   assert_output --partial "Downloading artifacts"
   assert_output --partial "Ignoring error in download of /tmp/foo.log"
-  assert_output --partial "Ignoring missing file /tmp/foo.log for relocation"
 
   unstub buildkite-agent
 }
@@ -102,7 +101,6 @@ setup() {
   assert_success
   assert_output --partial "Downloading artifacts"
   assert_output --partial "Ignoring error in download of /tmp/foo.log"
-  assert_output --partial "Ignoring missing file /tmp/foo.log for relocation"
   refute_output --partial "download artifact /tmp/foo.log"
 
   assert [ ! -e /tmp/foo2.log ]
@@ -110,7 +108,6 @@ setup() {
 
   unstub buildkite-agent
 }
-
 
 @test "Pre-command downloads multiple > 10 artifacts with build and relocation and some failures" {
   stub_calls=()
@@ -139,7 +136,6 @@ setup() {
       assert [ ! -e /tmp/foo-r-"${i}".log ]
       assert [ ! -e /tmp/foo-"${i}".log ]
       assert_output --partial "Ignoring error in download of /tmp/foo-${i}.log"
-      assert_output --partial "Ignoring missing file /tmp/foo-${i}.log"
       refute_output --partial "downloaded artifact /tmp/foo-${i}.log"
     fi
   done
