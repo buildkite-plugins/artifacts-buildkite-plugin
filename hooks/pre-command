@@ -64,16 +64,17 @@ bk_agent() {
   options+=("${@}")  # all the rest
 
   echo "~~~ Downloading artifacts ${EXTRA_MESSAGE}"
-  if ! buildkite-agent artifact "${options[@]}"; then
-    if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"}" != "false" ]]; then
-      echo "Ignoring error in download of" "${@: -2}"
-    else
-      echo "Error in download of" "${@: -2}"
-      return 1
-    fi
-  fi
+  buildkite-agent artifact "${options[@]}"
+}
 
-  return 0
+handle_bk_error() {
+  local filename="$1"
+  if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"}" != "false" ]]; then
+    echo "Ignoring error in download of ${filename}"
+  else
+    echo "Error in download of ${filename}"
+    exit 1
+  fi
 }
 
 handle_relocation() {
@@ -114,22 +115,24 @@ fi
 workdir="${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}"
 
 if [[ "${COMPRESSED}" == "true" ]]; then
-  bk_agent "${step_option}" "${build_option}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" "${workdir}"
+  if ! bk_agent "${step_option}" "${build_option}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" "${workdir}"; then
+    handle_bk_error "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+  else
+    echo "~~~ Uncompressing ${paths[*]} from ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+    "${compress[@]}" "${paths[@]}"
 
-  echo "~~~ Uncompressing ${paths[*]} from ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
-  "${compress[@]}" "${paths[@]}"
+    # single relocation
+    if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
+      handle_relocation ""
+    fi
 
-  # single relocation
-  if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
-    handle_relocation ""
+    # multiple relocations
+    index=0
+    for path in "${paths[@]}"; do
+      handle_relocation "${index}"
+      ((index+=1))
+    done
   fi
-
-  # multiple relocations
-  index=0
-  for path in "${paths[@]}"; do
-    handle_relocation "${index}"
-    ((index+=1))
-  done
 
 elif [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
   if [[ "${RELOCATION}" == "true" ]]; then
@@ -138,10 +141,12 @@ elif [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
     source="${paths[*]}"
   fi
 
-  bk_agent "${step_option}" "${build_option}" "${source}" "${workdir}"
-
-  if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
-    handle_relocation ""
+  if ! bk_agent "${step_option}" "${build_option}" "${source}" "${workdir}"; then
+    handle_bk_error "${source}"
+  else
+    if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
+      handle_relocation ""
+    fi
   fi
 elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
   index=0
@@ -159,9 +164,12 @@ elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
       source="${path}"
     fi
 
-    bk_agent "${!step_env_var:-${step_option}}" "${!build_env_var:-${build_option}}" "${source}" "${workdir}"
+    if ! bk_agent "${!step_env_var:-${step_option}}" "${!build_env_var:-${build_option}}" "${source}" "${workdir}"; then
+      handle_bk_error "${source}"
+    else
+      handle_relocation "${index}"
+    fi
 
-    handle_relocation "${index}"
     ((index+=1))
   done
 fi
