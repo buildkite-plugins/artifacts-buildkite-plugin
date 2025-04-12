@@ -166,7 +166,9 @@ elif [[ "${COMPRESSED}" == "true" ]]; then
     if [[ -n "${!dest_env_var:-}" ]]; then
       path="$(expand_vars "${dest_env_var}")"
     else
-      path="$(expand_vars path)"
+      # could use $path directly, but would break the ordering because 0,1,10,11,2,20,3 :(
+      # may be solved by using sort -V but it is GNU-specific
+      path="$(expand_vars "BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}")"
     fi
 
     final_paths+=("$path")
