@@ -161,6 +161,18 @@ steps:
           compressed: logs.tgz
 ```
 
+### `expand-download-vars` (boolean, **unsafe**, download only)
+
+When set to true, it will activate interpolation of variables in the elements of the `download` path-related configurations as well as `compressed` option if present. When turned off (the default), attempting to use variables will fail as the literal `$VARIABLE_NAME` string will be used.
+
+⚠️ Important: this is considered an unsafe option as the most compatible way to achieve this is to run the strings through `eval` which could lead to arbitrary code execution or information leaking if you don't have complete control of the pipeline.
+
+### `expand-upload-vars` (boolean, **unsafe**, download only)
+
+When set to true, it will activate interpolation of variables in the elements of the `upload` path-related configurations as well as `compressed` option if present. When turned off (the default), attempting to use variables will fail as the literal `$VARIABLE_NAME` string will be used.
+
+⚠️ Important: this is considered an unsafe option as the most compatible way to achieve this is to run the strings through `eval` which could lead to arbitrary code execution or information leaking if you don't have complete control of the pipeline.
+
 ### `ignore-missing` (boolean)
 
 If set to `true`, it will ignore errors caused when calling `buildkite-agent artifact` to prevent failures if you expect artifacts not to be present in some situations. When using the `compressed` property, it will ignore compressing the artifacts that are not present.

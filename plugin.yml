@@ -58,6 +58,10 @@ configuration:
         - type: array
           items:
             type: integer
+    expand-download-vars:
+      type: boolean
+    expand-upload-vars:
+      type: boolean
   oneOf:
     - required:
       - upload
@@ -65,4 +69,6 @@ configuration:
       - download
   dependencies:
     skip-on-status: [ upload ]
+    expand-download-vars: [ download ]
+    expand-upload-vars: [ upload ]
   additionalProperties: false
