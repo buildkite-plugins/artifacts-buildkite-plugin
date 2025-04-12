@@ -6,6 +6,19 @@ if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_DEBUG:-false}" =~ (true|on|1) ]] ; then
   set -x
 fi
 
+
+# expand variables in the variable name referenced
+# DANGEROUS due to the use of eval
+# assumes that the environment variable name exists
+expand_vars() {
+  if [[ ${BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS:-false} != "false" ]]; then
+    # expand the variable
+    eval echo "${!1}"
+  else
+    echo "${!1}"
+  fi
+}
+
 while IFS='=' read -r EXIT_VAR _ ; do
   if [[ $EXIT_VAR =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_SKIP_ON_STATUS(|_[0-9]+))$ ]]; then
     if [ "${BUILDKITE_COMMAND_EXIT_STATUS}" -eq "${!EXIT_VAR}" ]; then
@@ -55,9 +68,9 @@ if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
   COMPRESSED="true"
 
   if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.zip ]]; then
-    compress+=("zip" "-r" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
+    compress+=("zip" "-r")
   elif [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.tgz ]]; then
-    compress+=("tar" "czf" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
+    compress+=("tar" "czf")
   else
     echo "+++ 🚨 The inferred compression file format for the artifact is not currently supported"
     exit 1
@@ -91,11 +104,14 @@ handle_relocation() {
   dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${var_string}TO"
 
   if [[ -n "${!source_env_var:-}" ]] && [[ -n "${!dest_env_var:-}" ]]; then
-    if [[ -e ${!source_env_var} ]]; then
-      echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-      mv "${!source_env_var}" "${!dest_env_var}"
+    SOURCE_FILE="$(expand_vars "${source_env_var}")"
+    DEST_FILE="$(expand_vars "${dest_env_var}")"
+
+    if [[ -e "${SOURCE_FILE}" ]]; then
+      echo "~~~ Moving [${SOURCE_FILE}] to [${DEST_FILE}]..."
+      mv "${SOURCE_FILE}" "${DEST_FILE}"
     elif [[ ${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"} == "true" ]]; then
-      echo "Ignoring missing file ${!source_env_var} for relocation"
+      echo "Ignoring missing file ${SOURCE_FILE} for relocation"
     fi
   fi
 }
@@ -121,42 +137,47 @@ fi
 if [[ "${SINGULAR_UPLOAD_OBJECT}" == "true" ]]; then
   if [[ "${RELOCATION}" == "true" ]]; then
     handle_relocation ""
-    path="${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO}"
+    path="$(expand_vars BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO)"
   else
-    path="${paths[0]}"
+    export FILENAME="${paths[0]}"
+    path="$(expand_vars FILENAME)"
   fi
 
   if [[ "${COMPRESSED}" == "true" ]]; then
-    echo "~~~ Compressing ${path} to ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+    COMPRESSED_FILENAME="$(expand_vars BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED)"
+    echo "~~~ Compressing ${path} to ${COMPRESSED_FILENAME}"
     if [[ ! -e "${path}" ]]; then
       echo "+++ 🚨 Unable to compress artifact, '${path}' may not exist or is an empty directory"
     else
-      "${compress[@]}" "${path}"
-      path=" ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+      "${compress[@]}" "${COMPRESSED_FILENAME}" "${path}"
+      path="${COMPRESSED_FILENAME}"
     fi
   fi
 
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
   bk_agent "${args[@]}" "${path}"
 elif [[ "${COMPRESSED}" == "true" ]]; then
+  COMPRESSED_FILENAME="$(expand_vars BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED)"
   final_paths=()
   index=0
   for path in "${paths[@]}"; do
     handle_relocation "${index}"
     dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
     if [[ -n "${!dest_env_var:-}" ]]; then
-      path="${!dest_env_var}"
+      path="$(expand_vars "${dest_env_var}")"
+    else
+      path="$(expand_vars path)"
     fi
 
     final_paths+=("$path")
     ((index+=1))
   done
 
-  echo "~~~ Compressing ${final_paths[*]} to ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+  echo "~~~ Compressing ${final_paths[*]} to ${COMPRESSED_FILENAME}"
   "${compress[@]}" "${final_paths[@]}"
 
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
-  bk_agent "${args[@]}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+  bk_agent "${args[@]}" "${COMPRESSED_FILENAME}"
 elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
   index=0
   echo "~~~ Uploading artifacts ${EXTRA_MESSAGE}"
@@ -165,7 +186,9 @@ elif [[ "${MULTIPLE_UPLOADS}" == "true" ]]; then
     handle_relocation "${index}"
     dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_${index}_TO"
     if [[ -n "${!dest_env_var:-}" ]]; then
-      path="${!dest_env_var}"
+      path="$(expand_vars "${dest_env_var}")"
+    else
+      path="$(expand_vars path)"
     fi
 
     bk_agent "${args[@]}" "$path"
