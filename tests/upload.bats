@@ -283,3 +283,84 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   refute_output --partial "Uploading artifacts"
   assert_output --partial "skipping upload"
 }
+
+@test "File variables are not replaced" {
+  export RANDOM_VAR="random-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="test-\${RANDOM_VAR}.log"
+
+  stub buildkite-agent \
+    "artifact upload \* : echo \"uploaded \$3\""
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+  refute_output --partial "uploaded test-random-value.log"
+  assert_output --partial "uploaded test-\${RANDOM_VAR}.log"
+
+  unstub buildkite-agent
+}
+
+@test "File variables can be replaced" {
+  export RANDOM_VAR="random-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS="true"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="test-\${RANDOM_VAR}.log"
+
+  stub buildkite-agent \
+    "artifact upload \* : echo \"uploaded \$3\""
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+  refute_output --partial "uploaded test-\${RANDOM_VAR}.log"
+  assert_output --partial "uploaded test-random-value.log"
+
+  unstub buildkite-agent
+}
+
+@test "File variables can be replaced with relocation" {
+  export RANDOM_VAR="random-value"
+  export DEST_VAR="dest-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS="true"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_FROM="test-\${RANDOM_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO="test-\${DEST_VAR}.log"
+
+  stub buildkite-agent \
+    "artifact upload \* : echo \"uploaded \$3\""
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+  refute_output --partial "uploaded test-\${RANDOM_VAR}.log"
+  refute_output --partial "uploaded test-\${DEST_VAR}.log"
+  assert_output --partial "uploaded test-dest-value.log"
+
+  unstub buildkite-agent
+}
+
+@test "Multiple file variables can be replaced with relocation (sometimes)" {
+  export RANDOM_VAR="random-value"
+  export DEST_VAR="dest-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS="true"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0="test.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1_FROM="test-\${DEST_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1_TO="test-\${DEST_VAR}.log"
+
+  stub buildkite-agent \
+    "artifact upload \* : echo \"uploaded \$3\"" \
+    "artifact upload \* : echo \"uploaded \$3\""
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "Uploading artifacts"
+  assert_output --partial "uploaded test.log"
+
+  refute_output --partial "uploaded test-\${RANDOM_VAR}.log"
+  refute_output --partial "uploaded test-\${DEST_VAR}.log"
+  assert_output --partial "uploaded test-dest-value.log"
+
+  unstub buildkite-agent
+}

@@ -167,7 +167,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
   unstub buildkite-agent
   unstub tar
-  
+
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
@@ -193,7 +193,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   assert_output --partial "Compressing file.log to file.zip"
   assert_output --partial "uploaded file.zip"
   refute_output --partial "uploaded file.log"
-  
+
   unstub buildkite-agent
   unstub zip
 
@@ -224,7 +224,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   assert_output --partial "Compressing file.log to file.tgz"
   assert_output --partial "uploaded file.tgz"
   refute_output --partial "uploaded file.log"
-  
+
   unstub buildkite-agent
   unstub tar
 
@@ -349,7 +349,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
   unstub buildkite-agent
   unstub zip
-  
+
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
@@ -429,4 +429,91 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_FROM
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+}
+
+@test "Post-command does not replace compressed file variables" {
+  export RANDOM_VAR="random-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="test.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file-\${RANDOM_VAR}.zip"
+
+  touch "test.log"
+
+  stub buildkite-agent \
+    "artifact upload \* : echo uploaded \$3"
+
+  stub zip \
+    "-r \* \* : echo zipped \$3 into \$2"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+
+  assert_output --partial "Compressing test.log to file-\${RANDOM_VAR}.zip"
+  refute_output --partial "Compressing test.log to file-random-value.zip"
+
+  unstub buildkite-agent
+  unstub zip
+
+  rm "test.log"
+}
+
+@test "Post-command replaces compressed file variables" {
+  export RANDOM_VAR="random-value"
+  export OTHER_VAR="other-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD="test-\${OTHER_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file-\${RANDOM_VAR}.zip"
+  export BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS="true"
+
+  touch "test-other-value.log"
+
+  stub buildkite-agent \
+    "artifact upload \* : echo uploaded \$3"
+
+  stub zip \
+    "-r \* \* : echo zipped \$3 into \$2"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+
+  assert_output --partial "Compressing test-other-value.log to file-random-value.zip"
+
+  unstub buildkite-agent
+  unstub zip
+
+  rm "test-other-value.log"
+}
+
+@test "Post-command replaces file variables with multiple files with relocation (sometimes)" {
+  export RANDOM_VAR="random-value"
+  export OTHER_VAR="other-value"
+  export DEST_VAR="dest-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0="test-\${OTHER_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1_FROM="test2-\${OTHER_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1_TO="test-\${DEST_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file-\${RANDOM_VAR}.zip"
+  export BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS="true"
+
+  touch "test-other-value.log"
+  touch "test2-other-value.log"
+
+  stub buildkite-agent \
+    "artifact upload \* : echo uploaded \$3"
+
+  stub zip \
+    "-r \* \* : echo zipped \$3 into \$2"
+
+  run "$PWD/hooks/post-command"
+
+  assert_success
+
+  assert_output --partial "Moving [test2-other-value.log] to [test-dest-value.log]"
+  assert_output --partial "Compressing test-other-value.log test-dest-value.log to file-random-value.zip"
+
+  unstub buildkite-agent
+  unstub zip
+
+  rm -f "test-other-value.log"
+  rm -f "test2-other-value.log"
+  rm -f "test-dest-value.log"
 }
