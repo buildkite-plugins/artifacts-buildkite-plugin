@@ -31,7 +31,7 @@ steps:
   - command: ...
     plugins:
     - artifacts#v1.9.4:
-        upload: 
+        upload:
           - from: log1.log
             to: log2.log
 ```
@@ -91,7 +91,7 @@ steps:
   - command: ...
     plugins:
       - artifacts#v1.9.4:
-          download: 
+          download:
             - from: log1.log
               to: log2.log
 ```
@@ -105,7 +105,7 @@ steps:
       - artifacts#v1.9.4:
           step: UUID-DEFAULT
           build: UUID-DEFAULT-2
-          download: 
+          download:
             - from: log1.log
               to: log2.log
               step: UUID-1
@@ -114,23 +114,23 @@ steps:
               build: UUID-2
 ```
 
-## Configuration
+## Mandatory Configuration
+
+You must specify at least one of the following
 
 ### `upload` (string, array of strings, {from,to}, array of {from,to})
 
-A glob pattern, or array of glob patterns, for files to upload.
+A glob pattern, or array of glob patterns, for files to upload as-is. Alternatively, you can specify `from` and `to` to rename the artifact before uploading.
 
 ### `download` (string, array of strings, {from,to}, array of {from,to[,step][,build]})
 
-A glob pattern, or array of glob patterns, for files to download.
+A glob pattern, or array of glob patterns, for files to download. Alternatively you can specify `from` and `to` to rename the artifact after downloading. If you do so, you can also specify `step` and/or `build` to override those options for that particular artifact.
 
-### `step` (optional, string)
+## Other Configuration
 
-The job UUID or name to download the artifacts from unless specified otherwise in the `download` array specification.
+### `build` (`download`-only, string)
 
-### `build` (optional, string)
-
-The build UUID to download the artifact from unless specificed otherwise in the `download` array specification.
+The build UUID to download all artifacts from. Note that you can override it for specific artifacts when using the verbose format of the `download` element.
 
 ### `compressed` (optional, string)
 
@@ -194,6 +194,10 @@ steps:
           - 1
           - 5
 ```
+
+### `step` (`download`-only, string)
+
+The job UUID or name to download all artifacts from. Note that you can override it for specific artifacts when using the verbose format of the `download` element.
 
 ## Developing
 
