@@ -263,7 +263,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
 @test "Pre-command does nothing if there is no download-specific vars setup" {
   run "$PWD/hooks/pre-command"
-  
+
   assert_success
   refute_output --partial "Downloading artifacts"
 }
@@ -287,4 +287,71 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO
+}
+
+@test "Pre-command does not expand variables by default" {
+  export RANDOM_VAR="random-var"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="file-\${RANDOM_VAR}.log"
+
+  stub buildkite-agent \
+    "artifact download \* \* : echo can not download artifact \$3 to \$4; exit 1"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_failure
+  assert_output --partial "Error in download of file-\${RANDOM_VAR}.log"
+  refute_output --partial "file-random-var.log to ."
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_DOWNLOAD_VARS
+}
+
+@test "Pre-command downloads artifacts with expansion" {
+  export RANDOM_VAR="random-var"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="\${RANDOM_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_DOWNLOAD_VARS="true"
+
+  stub buildkite-agent \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "Downloading artifacts"
+  assert_output --partial "downloaded artifact random-var.log to ."
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_DOWNLOAD_VARS
+}
+
+@test "Pre-command downloads multiple artifacts with expansion and relocation" {
+  export RANDOM_VAR="random-var"
+  export DEST_VAR="dest-var"
+  export BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_DOWNLOAD_VARS="true"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0="file.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1_FROM="file-\${RANDOM_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1_TO="dest-\${DEST_VAR}.log"
+
+  stub buildkite-agent \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4; touch \$3" \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4; touch \$3"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "Downloading artifacts"
+  assert_output --partial "downloaded artifact file-random-var.log to ."
+  assert_output --partial "Moving [file-random-var.log] to [dest-dest-var.log]"
+
+  assert [ -e file.log ]
+  assert [ -e dest-dest-var.log ]
+  assert [ ! -e file-random-var.log ]
+
+  rm file.log dest-dest-var.log
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_DOWNLOAD_VARS
 }
