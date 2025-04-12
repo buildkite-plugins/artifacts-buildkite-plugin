@@ -446,6 +446,8 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unstub buildkite-agent
   unstub unzip
 
+  rm -f bar-other-value.log
+
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
   unset BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS
 }
