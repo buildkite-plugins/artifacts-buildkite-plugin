@@ -79,8 +79,8 @@ fi
 
 workdir=${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}
 
-pushd "${workdir}"
-trap popd EXIT
+pushd "${workdir}" > /dev/null
+trap "popd > /dev/null" EXIT
 
 bk_agent() {
   if ! buildkite-agent artifact "${@}"; then
