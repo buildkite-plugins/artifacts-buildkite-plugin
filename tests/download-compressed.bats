@@ -8,7 +8,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 @test "Invalid compressed format" {
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="file.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.rar"
-  
+
   run "$PWD/hooks/pre-command"
 
   assert_failure
@@ -22,7 +22,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 @test "Single value zip" {
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="*.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.zip"
-  
+
   stub buildkite-agent \
     "artifact download \* \* : echo downloaded \$3 to \$4"
 
@@ -46,7 +46,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 @test "Single value tgz" {
   export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="*.log"
   export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="file.tgz"
-  
+
   stub buildkite-agent \
     "artifact download \* \* : echo downloaded \$3 to \$4"
 
@@ -230,7 +230,7 @@ load "${BATS_PLUGIN_PATH}/load.bash"
 
   unstub buildkite-agent
   unstub tar
-  
+
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
   unset BUILDKITE_PLUGIN_ARTIFACTS_BUILD
   unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
@@ -402,4 +402,119 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_TO
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_FROM
   unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0_TO
+}
+
+@test "Pre-command does not replace compressed file variables" {
+  export RANDOM_VAR="random-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="bar.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="FILE-\${RANDOM_VAR}.zip"
+
+  stub buildkite-agent \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_failure
+  refute_output --partial "downloaded artifact FILE-random-value.zip"
+  assert_output --partial "downloaded artifact FILE-\${RANDOM_VAR}.zip"
+
+  unstub buildkite-agent
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+  unset BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS
+}
+
+@test "Pre-command replaces compressed file variables" {
+  export RANDOM_VAR="random-value"
+  export OTHER_VAR="other-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="bar-\${OTHER_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="FILE-\${RANDOM_VAR}.zip"
+  export BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_DOWNLOAD_VARS="true"
+
+  stub buildkite-agent \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4"
+
+  stub unzip \
+    "\* \* : echo extracted \$2 from \$1; touch \$2"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "downloaded artifact FILE-random-value.zip"
+  assert_output --partial "Uncompressing bar-other-value.log from FILE-random-value.zip"
+
+  unstub buildkite-agent
+  unstub unzip
+
+  rm -f bar-other-value.log
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+  unset BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS
+}
+
+@test "Pre-command replaces file variables with relocation" {
+  export RANDOM_VAR="random-value"
+  export OTHER_VAR="other-value"
+  export DEST_VAR="dest-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM="/tmp/bar-\${OTHER_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO="/tmp/baz-\${DEST_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="FILE-\${RANDOM_VAR}.zip"
+  export BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_DOWNLOAD_VARS="true"
+
+  stub buildkite-agent \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4"
+
+  stub unzip \
+    "\* \* : echo extracted \$2 from \$1; touch \$2"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "downloaded artifact FILE-random-value.zip"
+  assert_output --partial "Uncompressing /tmp/bar-other-value.log from FILE-random-value.zip"
+  assert_output --partial "Moving [/tmp/bar-other-value.log] to [/tmp/baz-dest-value.log]"
+
+  assert [ ! -e /tmp/bar-other-value.log ]
+  assert [ -e /tmp/baz-dest-value.log ]
+  rm /tmp/baz-dest-value.log
+
+  unstub buildkite-agent
+  unstub unzip
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+  unset BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS
+}
+
+@test "Pre-command replaces file variables with multiple files with relocation sometimes" {
+  export RANDOM_VAR="random-value"
+  export OTHER_VAR="other-value"
+  export DEST_VAR="dest-value"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_0="/tmp/bar.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1_FROM="/tmp/bar-\${OTHER_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_1_TO="/tmp/baz-\${DEST_VAR}.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED="FILE-\${RANDOM_VAR}.zip"
+  export BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_DOWNLOAD_VARS="true"
+
+  stub buildkite-agent \
+    "artifact download \* \* : echo downloaded artifact \$3 to \$4"
+
+  stub unzip \
+    "\* \* \* : echo extracted \$2 and \$3 from \$1; touch \$2 \$3"
+
+  run "$PWD/hooks/pre-command"
+
+  assert_success
+  assert_output --partial "downloaded artifact FILE-random-value.zip"
+  assert_output --partial "Uncompressing /tmp/bar.log /tmp/bar-other-value.log from FILE-random-value.zip"
+  assert_output --partial "Moving [/tmp/bar-other-value.log] to [/tmp/baz-dest-value.log]"
+
+  assert [ ! -e /tmp/bar-other-value.log ]
+  assert [ -e /tmp/baz-dest-value.log ]
+  rm /tmp/baz-dest-value.log
+
+  unstub buildkite-agent
+  unstub unzip
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED
+  unset BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_UPLOAD_VARS
 }

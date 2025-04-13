@@ -31,7 +31,7 @@ steps:
   - command: ...
     plugins:
     - artifacts#v1.9.4:
-        upload: 
+        upload:
           - from: log1.log
             to: log2.log
 ```
@@ -91,7 +91,7 @@ steps:
   - command: ...
     plugins:
       - artifacts#v1.9.4:
-          download: 
+          download:
             - from: log1.log
               to: log2.log
 ```
@@ -105,7 +105,7 @@ steps:
       - artifacts#v1.9.4:
           step: UUID-DEFAULT
           build: UUID-DEFAULT-2
-          download: 
+          download:
             - from: log1.log
               to: log2.log
               step: UUID-1
@@ -114,25 +114,25 @@ steps:
               build: UUID-2
 ```
 
-## Configuration
+## Mandatory Configuration
 
-### `upload` (string, array of strings, {from,to}, array of {from,to})
-
-A glob pattern, or array of glob patterns, for files to upload.
+You must specify at least one of the following
 
 ### `download` (string, array of strings, {from,to}, array of {from,to[,step][,build]})
 
-A glob pattern, or array of glob patterns, for files to download.
+A glob pattern, or array of glob patterns, for files to download. Alternatively you can specify `from` and `to` to rename the artifact after downloading. If you do so, you can also specify `step` and/or `build` to override those options for that particular artifact.
 
-### `step` (optional, string)
+### `upload` (string, array of strings, {from,to}, array of {from,to})
 
-The job UUID or name to download the artifacts from unless specified otherwise in the `download` array specification.
+A glob pattern, or array of glob patterns, for files to upload as-is. Alternatively, you can specify `from` and `to` to rename the artifact before uploading.
 
-### `build` (optional, string)
+## Other Configuration
 
-The build UUID to download the artifact from unless specificed otherwise in the `download` array specification.
+### `build` (string, download only)
 
-### `compressed` (optional, string)
+The build UUID to download all artifacts from. Note that you can override it for specific artifacts when using the verbose format of the `download` element.
+
+### `compressed` (string)
 
 ⚠️ Limitations:
 * filename needs to end with `.zip` or `.tgz` and that will determine the compression executable to use
@@ -161,11 +161,23 @@ steps:
           compressed: logs.tgz
 ```
 
-### `ignore-missing` (optional, boolean)
+### `expand-download-vars` (boolean, **unsafe**, download only)
+
+When set to true, it will activate interpolation of variables in the elements of the `download` path-related configurations as well as `compressed` option if present. When turned off (the default), attempting to use variables will fail as the literal `$VARIABLE_NAME` string will be used.
+
+⚠️ Important: this is considered an unsafe option as the most compatible way to achieve this is to run the strings through `eval` which could lead to arbitrary code execution or information leaking if you don't have complete control of the pipeline.
+
+### `expand-upload-vars` (boolean, **unsafe**, download only)
+
+When set to true, it will activate interpolation of variables in the elements of the `upload` path-related configurations as well as `compressed` option if present. When turned off (the default), attempting to use variables will fail as the literal `$VARIABLE_NAME` string will be used.
+
+⚠️ Important: this is considered an unsafe option as the most compatible way to achieve this is to run the strings through `eval` which could lead to arbitrary code execution or information leaking if you don't have complete control of the pipeline.
+
+### `ignore-missing` (boolean)
 
 If set to `true`, it will ignore errors caused when calling `buildkite-agent artifact` to prevent failures if you expect artifacts not to be present in some situations. When using the `compressed` property, it will ignore compressing the artifacts that are not present.
 
-### `skip-on-status` (optional, integer or array of integers, uploads only)
+### `skip-on-status` (integer or array of integers, upload only)
 
 You can set this to the exit codes or array of exit codes of the command step (as defined by the `BUILDKITE_COMMAND_EXIT_STATUS` variable) that will cause the plugin to avoid trying to upload artifacts.
 
@@ -194,6 +206,10 @@ steps:
           - 1
           - 5
 ```
+
+### `step` (string, download only)
+
+The job UUID or name to download all artifacts from. Note that you can override it for specific artifacts when using the verbose format of the `download` element.
 
 ## Developing
 

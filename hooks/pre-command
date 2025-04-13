@@ -14,23 +14,33 @@ compress=()
 
 COMPRESSED="false"
 SINGULAR_DOWNLOAD_OBJECT="false"
-RELOCATION="false"
 MULTIPLE_DOWNLOADS="false"
+
+# expand variables in the variable name referenced
+# DANGEROUS due to the use of eval
+# assumes that the environment variable name exists
+expand_vars() {
+  if [[ ${BUILDKITE_PLUGIN_ARTIFACTS_EXPAND_DOWNLOAD_VARS:-false} != "false" ]]; then
+    # expand the variable
+    eval echo "${!1}"
+  else
+    echo "${!1}"
+  fi
+}
 
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] || { [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; }; then
     SINGULAR_DOWNLOAD_OBJECT="true"
     if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD:-}" ]] ; then
-      paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD")
+      paths+=("$(expand_vars BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD)")
     elif [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM:-}" ]] && [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]] ; then
-      RELOCATION="true"
-      paths+=("$BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM")
+      paths+=("$(expand_vars BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM)")
     fi
 fi
 
 while IFS='=' read -r path _ ; do
   if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+)$ ]] || [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_[0-9]+_FROM)$ ]]; then
     MULTIPLE_DOWNLOADS="true"
-    paths+=("${!path}")
+    paths+=("$(expand_vars "${path}")")
   fi
 done < <(env | sort)
 
@@ -87,25 +97,28 @@ handle_relocation() {
   source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${var_string}FROM"
   dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${var_string}TO"
   if [[ -n "${!dest_env_var:-}" ]]; then
-    if ! [[ -d $(dirname "${!dest_env_var}") ]]; then
-      mkdir -p "$(dirname "${!dest_env_var}")"
+    SOURCE_FILE="$(expand_vars "${source_env_var}")"
+    DEST_FILE="$(expand_vars "${dest_env_var}")"
+    if ! [[ -d "$(dirname "${DEST_FILE}")" ]]; then
+      mkdir -p "$(dirname "${DEST_FILE}")"
     fi
 
-    if [[ ! -e "${!source_env_var}" ]] && [[ ${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"} != "false" ]]; then
-      echo "Ignoring missing file ${!source_env_var} for relocation"
+    if [[ ! -e "${SOURCE_FILE}" ]] && [[ ${BUILDKITE_PLUGIN_ARTIFACTS_IGNORE_MISSING:-"false"} != "false" ]]; then
+      echo "Ignoring missing file ${SOURCE_FILE} for relocation"
     else
-      echo "~~~ Moving [${!source_env_var}] to [${!dest_env_var}]..."
-      mv "${!source_env_var}" "${!dest_env_var}"
+      echo "~~~ Moving [${SOURCE_FILE}] to [${DEST_FILE}]..."
+      mv "${SOURCE_FILE}" "${DEST_FILE}"
     fi
   fi
 }
 
 if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED:-}" ]]; then
   COMPRESSED="true"
-  if [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.zip ]]; then
-    compress+=("unzip" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
-  elif [[ "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" =~ .*\.tgz ]]; then
-    compress+=("tar" "xzf" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}")
+  COMPRESSED_FILENAME="$(expand_vars BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED)"
+  if [[ "${COMPRESSED_FILENAME}" =~ .*\.zip ]]; then
+    compress+=("unzip" "${COMPRESSED_FILENAME}")
+  elif [[ "${COMPRESSED_FILENAME}" =~ .*\.tgz ]]; then
+    compress+=("tar" "xzf" "${COMPRESSED_FILENAME}")
   else
     echo "+++ 🚨 The inferred compression file format for the artifact is not currently supported"
     exit 1
@@ -115,16 +128,14 @@ fi
 workdir="${BUILDKITE_PLUGIN_ARTIFACTS_WORKDIR:-.}"
 
 if [[ "${COMPRESSED}" == "true" ]]; then
-  if ! bk_agent "${step_option}" "${build_option}" "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}" "${workdir}"; then
-    handle_bk_error "${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+  if ! bk_agent "${step_option}" "${build_option}" "${COMPRESSED_FILENAME}" "${workdir}"; then
+    handle_bk_error "${COMPRESSED_FILENAME}"
   else
-    echo "~~~ Uncompressing ${paths[*]} from ${BUILDKITE_PLUGIN_ARTIFACTS_COMPRESSED}"
+    echo "~~~ Uncompressing ${paths[*]} from ${COMPRESSED_FILENAME}"
     "${compress[@]}" "${paths[@]}"
 
     # single relocation
-    if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
-      handle_relocation ""
-    fi
+    handle_relocation ""
 
     # multiple relocations
     index=0
@@ -135,34 +146,31 @@ if [[ "${COMPRESSED}" == "true" ]]; then
   fi
 
 elif [[ "${SINGULAR_DOWNLOAD_OBJECT}" == "true" ]]; then
-  if [[ "${RELOCATION}" == "true" ]]; then
-    source="${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FROM}"
-  else
-    source="${paths[*]}"
-  fi
+  source="${paths[*]}"
 
   if ! bk_agent "${step_option}" "${build_option}" "${source}" "${workdir}"; then
     handle_bk_error "${source}"
   else
-    if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_TO:-}" ]]; then
-      handle_relocation ""
-    fi
+    handle_relocation ""
   fi
 elif [[ "${MULTIPLE_DOWNLOADS}" == "true" ]]; then
   index=0
 
   for path in "${paths[@]}"; do
-    source_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_FROM"
-    dest_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_TO"
-    step_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_STEP"
-    build_env_var="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}_BUILD"
+    env_var_base="BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_${index}"
+    dest_env_var="${env_var_base}_TO"
+    step_env_var="${env_var_base}_STEP"
+    build_env_var="${env_var_base}_BUILD"
 
-    # finally get the artifact to download
-    if [ -n "${!source_env_var:-}" ] && [ -n "${!dest_env_var:-}" ]; then
-      source="${!source_env_var}"
+    # could use $path directly, but would break the ordering because 0,1,10,11,2,20,3 :(
+    # may be solved by using sort -V but it is GNU-specific
+    if [ -z "${!env_var_base:-}" ]; then
+      source_env_var="${env_var_base}_FROM"
     else
-      source="${path}"
+      source_env_var="${env_var_base}"
     fi
+
+    source="$(expand_vars "${source_env_var}")"
 
     if ! bk_agent "${!step_env_var:-${step_option}}" "${!build_env_var:-${build_option}}" "${source}" "${workdir}"; then
       handle_bk_error "${source}"
