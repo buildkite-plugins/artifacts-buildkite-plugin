@@ -213,9 +213,9 @@ The job UUID or name to download all artifacts from. Note that you can override 
 
 ## Compatibility
 
-| Plugin | Elastic Stack | Agent Stack K8s | Hosted (Mac) | Hosted (Linux) | Notes |
-| ------ | :-----------: | :-------------: | :----: | :----: |:---- |
-| Artifacts | ✅ | ✅ | ✅ | ✅ | n/a |
+| Elastic Stack | Agent Stack K8s | Hosted (Mac) | Hosted (Linux) | Notes |
+| :-----------: | :-------------: | :----: | :----: |:---- |
+| ✅ | ✅ | ✅ | ✅ | n/a |
 
 - ✅ Fully supported (all combinations of attributes have been tested to pass)
 - ⚠️ Partially supported (some combinations cause errors/issues)
