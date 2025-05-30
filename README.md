@@ -211,7 +211,7 @@ steps:
 
 The job UUID or name to download all artifacts from. Note that you can override it for specific artifacts when using the verbose format of the `download` element.
 
-## Compatibility record
+## Compatibility
 
 | Plugin | Elastic Stack | Agent Stack K8s | Hosted (Mac) | Hosted (Linux) | Notes |
 | ------ | :-----------: | :-------------: | :----: | :----: |:---- |
