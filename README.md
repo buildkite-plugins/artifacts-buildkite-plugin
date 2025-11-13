@@ -173,7 +173,7 @@ When set to true, it will activate interpolation of variables in the elements of
 
 ⚠️ Important: this is considered an unsafe option as the most compatible way to achieve this is to run the strings through `eval` which could lead to arbitrary code execution or information leaking if you don't have complete control of the pipeline.
 
-Note: Runtime variables like `BUILDKITE_RETRY_COUNT` may not expand reliably as Buildkite interpolates pipeline YAML at upload time, before this plugin runs. In cases such as this, consider using [Runtime variable interpolation](https://buildkite.com/docs/pipelines/configure/environment-variables#runtime-variable-interpolation)
+Note: Runtime variables like `BUILDKITE_RETRY_COUNT` may not expand reliably as Buildkite interpolates pipeline YAML at upload time, before this plugin runs. In cases such as this, escape the `$`character using `$$` or `\$` to ensure [they are interpolated at runtime](https://buildkite.com/docs/pipelines/configure/environment-variables#runtime-variable-interpolation)
 
 ### `ignore-missing` (boolean)
 
