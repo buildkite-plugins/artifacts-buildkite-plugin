@@ -52,12 +52,16 @@ if [[ -n "${BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD:-}" ]] || { [[ -n "${BUILDKITE_PLU
   fi
 fi
 
-while IFS='=' read -r path _ ; do
+# compgen -e lists real variable names (not env's text), so a multi-line
+# value like BUILDKITE_MESSAGE can't be misread as a fake name. Regexes stay
+# unanchored on purpose: anchoring breaks the relocation-only case
+# (UPLOAD_N_FROM/_TO with no bare UPLOAD_N).
+while IFS= read -r path; do
   if [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+) ]] && ! [[ $path =~ ^(BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_[0-9]+_TO) ]]; then
     MULTIPLE_UPLOADS="true"
     paths+=("${!path}")
   fi
-done < <(env | sort)
+done < <(compgen -e | sort)
 
 if [[ "${#paths[@]}" -le 0 ]]; then
   # no upload data
