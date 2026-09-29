@@ -340,6 +340,26 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unstub buildkite-agent
 }
 
+@test "Post-command ignores an upload-shaped continuation line inside a multiline env value" {
+  stub buildkite-agent \
+    "artifact upload \* : echo uploaded \$3" \
+    "artifact upload \* : echo uploaded \$3"
+
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0="genuine1.log"
+  export BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1="genuine2.log"
+  export BUILDKITE_MESSAGE=$'Fix a bug\nBUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_9=spoofed.log'
+  run "$PWD/hooks/post-command"
+
+  assert_success
+  assert_output --partial "uploaded genuine1.log"
+  assert_output --partial "uploaded genuine2.log"
+
+  unstub buildkite-agent
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_0
+  unset BUILDKITE_PLUGIN_ARTIFACTS_UPLOAD_1
+  unset BUILDKITE_MESSAGE
+}
+
 @test "Multiple file variables can be replaced with relocation (sometimes)" {
   export RANDOM_VAR="random-value"
   export DEST_VAR="dest-value"
