@@ -83,7 +83,7 @@ handle_bk_error() {
     echo "Ignoring error in download of ${filename}"
   else
     echo "Error in download of ${filename}"
-    exit 1
+    exit "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FAILURE_EXIT_STATUS:-1}"
   fi
 }
 
