@@ -50,6 +50,10 @@ configuration:
     compressed:
       type: string
       pattern: '.*(.zip|.tgz)$'
+    download-failure-exit-status:
+      type: integer
+      minimum: 1
+      maximum: 255
     ignore-missing:
       type: boolean
     skip-on-status:
@@ -68,6 +72,7 @@ configuration:
     - required:
       - download
   dependencies:
+    download-failure-exit-status: [ download ]
     skip-on-status: [ upload ]
     expand-download-vars: [ download ]
     expand-upload-vars: [ upload ]
