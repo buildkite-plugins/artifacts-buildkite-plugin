@@ -8,6 +8,13 @@ fi
 
 step_option="${BUILDKITE_PLUGIN_ARTIFACTS_STEP:-}"
 build_option="${BUILDKITE_PLUGIN_ARTIFACTS_BUILD:-}"
+download_failure_exit_status="${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FAILURE_EXIT_STATUS:-1}"
+
+if [[ ! "${download_failure_exit_status}" =~ ^[1-9][0-9]{0,2}$ ]] ||
+  (( 10#${download_failure_exit_status} > 255 )); then
+  echo "download-failure-exit-status must be an integer between 1 and 255" >&2
+  exit 1
+fi
 
 paths=()
 compress=()
@@ -83,7 +90,7 @@ handle_bk_error() {
     echo "Ignoring error in download of ${filename}"
   else
     echo "Error in download of ${filename}"
-    exit "${BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FAILURE_EXIT_STATUS:-1}"
+    exit "${download_failure_exit_status}"
   fi
 }
 

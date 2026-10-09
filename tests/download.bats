@@ -49,6 +49,22 @@ load "${BATS_PLUGIN_PATH}/load.bash"
   unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FAILURE_EXIT_STATUS
 }
 
+@test "Pre-command rejects invalid artifact download failure exit statuses" {
+  export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD="*.log"
+
+  for invalid_status in 0 256 -1 not-an-integer; do
+    export BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FAILURE_EXIT_STATUS="${invalid_status}"
+    run "$PWD/hooks/pre-command"
+
+    assert_failure 1
+    assert_output --partial \
+      "download-failure-exit-status must be an integer between 1 and 255"
+  done
+
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD
+  unset BUILDKITE_PLUGIN_ARTIFACTS_DOWNLOAD_FAILURE_EXIT_STATUS
+}
+
 @test "Pre-command downloads artifacts with relocation" {
   stub buildkite-agent \
     "artifact download \* \* : echo downloaded artifact \$3 to \$4; touch /tmp/foo.log"
