@@ -1,7 +1,7 @@
 steps:
   - label: "🤡 :hammer:"
     plugins:
-      - plugin-tester#v1.3.0: ~
+      - plugin-tester#v1.4.0: ~
 
   - label: ":sparkles: lint"
     plugins:
